@@ -110,9 +110,12 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
             <span style={{ fontSize: 15, fontWeight: 800, color: C.ink }}>L2 monitoring by process stage</span>
             <span style={{ fontSize: 12.5, color: C.faint }}>{region === "All-Delhi NCR" ? "All four states combined" : `${region} only`}</span>
           </div>
-          {["VALUE", "COUNT", "PROGRESS"].map((h, i) => (
-            <span key={h} style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint, textAlign: i === 0 ? "right" : "left" }}>{h}</span>
-          ))}
+          <span />
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint, textAlign: "right" }}>VALUE</span>
+          <span />
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint }}>COUNT</span>
+          <span />
+          <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint }}>PROGRESS</span>
           <span />
         </div>
 
@@ -126,8 +129,11 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                     <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>{m.stageLabel}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>{m.name}</div>
                   </div>
+                  <span />
                   <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: m.flag }}>{m.pct}</span>
+                  <span />
                   <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{m.frac}</span>
+                  <span />
                   <Bar view={m} height={8} />
                   <div style={{ justifySelf: "end" }}><InfoButton onClick={() => setDetailId(m.id)} /></div>
                 </div>

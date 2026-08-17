@@ -185,6 +185,6 @@ function Field({ label, value, bare }) {
   );
 }
 
-export const GRID = "minmax(240px,3fr) 96px 172px minmax(70px,1fr) 34px";
+export const GRID = "minmax(240px,440px) 1fr 90px 70px 160px 1fr minmax(90px,280px) 34px";
 
 export { C };

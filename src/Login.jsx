@@ -62,7 +62,7 @@ export default function Login({ onLogin }) {
         flex: "1 1 46%", minWidth: 0, background: `linear-gradient(165deg, ${ink} 0%, ${panel} 60%, #1c1c1f 100%)`,
         display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 56px", color: "#fff",
       }}>
-        <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-.01em", color: "#fff" }}>
+        <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-.01em", color: "#fff", textAlign: "center" }}>
           Delhi NCR<br />Clean Air Dashboard
         </div>
       </div>
