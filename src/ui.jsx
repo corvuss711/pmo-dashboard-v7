@@ -27,10 +27,10 @@ export function Dropdown({ label, icon, options, open, onToggle, width = 200, al
   return (
     <div style={{ position: "relative", flex: "none" }}>
       <button type="button" onClick={onToggle}
-        style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: "#fff",
-          border: `1px solid ${C.blueLine}`, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
-          fontWeight: 600, color: C.blue, cursor: "pointer", whiteSpace: "nowrap" }}>
-        {icon}{label}<span style={{ opacity: 0.6, fontSize: 10 }}>▾</span>
+        style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: C.blue,
+          border: 0, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
+          fontWeight: 700, color: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>
+        {icon}{label}<span style={{ opacity: 0.7, fontSize: 10 }}>▾</span>
       </button>
       {open && (
         <div style={{ position: "absolute", top: 44, [align]: 0, minWidth: width, background: "#fff",

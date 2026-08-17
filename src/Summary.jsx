@@ -51,72 +51,98 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
             </div>
           )}
         </div>
-        <span style={{ fontSize: 14, color: C.mute, whiteSpace: "nowrap" }}>Consolidated L1 status across all {INITIATIVES.length} initiatives</span>
         <div style={{ flex: 1 }} />
         <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
           onToggle={() => setMenu(menu === "range" ? null : "range")} />
       </div>
 
       <div style={{ padding: "22px 24px 44px", display: "flex", flexDirection: "column", gap: 26 }}>
-        {MINISTRIES.map((m) => (
-          <section key={m.key}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 11 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
-              <span style={{ fontSize: 12.5, color: C.faint }}>{m.full}</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 18 }}>
-              {INITIATIVES.filter((i) => i.ministry === m.key).map((i) => {
-                const ks = l1Of(i, "All-Delhi NCR", rf, null, true);
-                const isHovered = hoveredCard === i.key;
-                return (
-                  <article key={i.key} data-card
-                    onClick={() => onNavigate(i.key, "All-Delhi NCR")}
-                    onMouseEnter={() => setHoveredCard(i.key)}
-                    onMouseLeave={() => setHoveredCard(null)}
-                    style={{
-                      background: "#fff",
-                      border: `1.5px solid ${isHovered ? C.blue : "#CBD5E1"}`,
-                      borderRadius: 6,
-                      display: "flex",
-                      flexDirection: "column",
-                      cursor: "pointer",
-                      boxShadow: isHovered ? "0 8px 22px rgba(29,63,134,.16)" : "0 2px 6px rgba(0,0,0,.06)",
-                      transform: isHovered ? "translateY(-2px)" : "none",
-                      transition: "all 0.15s ease",
-                      overflow: "hidden"
-                    }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: isHovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
-                      <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
-                      {i.note && (
-                        <span style={{ padding: "3px 8px", border: "1px solid #D2D2CA", background: C.paper, borderRadius: 4,
-                          fontSize: 11, fontWeight: 700, color: C.mute }}>{i.note}</span>
-                      )}
-                      <div style={{ flex: 1 }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: C.faint }}>{i.owner}</span>
-                      <span style={{ fontSize: 14, color: C.blue, fontWeight: 700, marginLeft: 4 }}>›</span>
-                    </div>
-                    {ks.map((k, idx) => (
-                      <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                          <div style={{ fontSize: 12.5, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>{k.name}</div>
-                          <InfoButton onClick={(e) => { e.stopPropagation(); setDetail(k); }} />
-                        </div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
-                          <Bar view={k} height={7} />
-                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{k.pct}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        {MINISTRIES.map((m) => {
+          const cards = INITIATIVES.filter((i) => i.ministry === m.key)
+            .map((i) => ({ i, ks: l1Of(i, "All-Delhi NCR", rf, null, true) }));
+          const big = cards.filter((c) => c.ks.length > 1);
+          const small = cards.filter((c) => c.ks.length === 1);
+          // One multi-metric card paired with one or more single-metric cards: put the
+          // multi-metric card alone on the left, stack the rest on the right to match its height.
+          const splitLayout = big.length === 1 && small.length >= 1 && big.length + small.length === cards.length;
+
+          const card = ({ i, ks }, fill) => (
+            <InitiativeCard key={i.key} i={i} ks={ks} fill={fill}
+              hovered={hoveredCard === i.key}
+              onHover={() => setHoveredCard(i.key)}
+              onLeave={() => setHoveredCard(null)}
+              onOpen={() => onNavigate(i.key, "All-Delhi NCR")}
+              onDetail={(k) => setDetail(k)} />
+          );
+
+          return (
+            <section key={m.key}>
+              <div style={{ marginBottom: 11 }}>
+                <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
+              </div>
+              {splitLayout ? (
+                <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
+                  {card(big[0], true)}
+                  <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+                    {small.map((c) => card(c, false))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 18 }}>
+                  {cards.map((c) => card(c, false))}
+                </div>
+              )}
+            </section>
+          );
+        })}
       </div>
 
       {detail && <DetailDrawer detail={detail} onClose={() => setDetail(null)} fixed />}
     </div>
+  );
+}
+
+function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+  return (
+    <article data-card
+      onClick={onOpen}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
+      style={{
+        background: "#fff",
+        border: `1.5px solid ${hovered ? C.blue : "#CBD5E1"}`,
+        borderRadius: 6,
+        display: "flex",
+        flexDirection: "column",
+        cursor: "pointer",
+        boxShadow: hovered ? "0 8px 22px rgba(29,63,134,.16)" : "0 2px 6px rgba(0,0,0,.06)",
+        transform: hovered ? "translateY(-2px)" : "none",
+        transition: "all 0.15s ease",
+        overflow: "hidden",
+        ...(fill ? { flex: "1 1 0", minWidth: 0 } : null)
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: hovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
+        <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
+        {i.note && (
+          <span style={{ padding: "3px 8px", border: "1px solid #D2D2CA", background: C.paper, borderRadius: 4,
+            fontSize: 11, fontWeight: 700, color: C.mute }}>{i.note}</span>
+        )}
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 14, color: C.blue, fontWeight: 700, marginLeft: 4 }}>›</span>
+      </div>
+      {ks.map((k, idx) => (
+        <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>{k.name}</div>
+            <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
+            <Bar view={k} height={7} />
+            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{k.pct}</span>
+          </div>
+        </div>
+      ))}
+    </article>
   );
 }
