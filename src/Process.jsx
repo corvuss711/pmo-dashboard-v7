@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NAV, REGIONS, l1Of, l2Of, rangeFactor } from "./data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID } from "./ui.jsx";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon } from "./ui.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -10,7 +10,7 @@ const LayersIcon = (
 
 /* Full-page process view: L1 cards pinned across the top, the complete L2 list
    below, metric definitions in a drawer. Region "comparative" is the state tiles. */
-export default function Process({ initiative, region, onNavigate }) {
+export default function Process({ initiative, region, onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState({ from: "2026-02-01", to: "2026-08-11" });
   const [menu, setMenu] = useState(null);
   const [detailId, setDetailId] = useState(null);
@@ -29,8 +29,11 @@ export default function Process({ initiative, region, onNavigate }) {
         <img src="/emblem.png" alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px solid #D8D8D2",
-          borderRadius: 6, color: C.blue, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Sign out</div>
+        <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+          border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
+          fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
+          {loggingOut && <SpinnerIcon />}{loggingOut ? "Signing out…" : "Sign out"}
+        </button>
       </header>
 
       <div style={{ background: "#fff", borderTop: `1px solid ${C.line}` }}>
