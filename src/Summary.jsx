@@ -62,9 +62,10 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
             .map((i) => ({ i, ks: l1Of(i, "All-Delhi NCR", rf, null, true) }));
           const big = cards.filter((c) => c.ks.length > 1);
           const small = cards.filter((c) => c.ks.length === 1);
-          // One multi-metric card paired with one or more single-metric cards: put the
+          // One multi-metric card paired with one or two single-metric cards: put the
           // multi-metric card alone on the left, stack the rest on the right to match its height.
-          const splitLayout = big.length === 1 && small.length >= 1 && big.length + small.length === cards.length;
+          // With more cards than that (e.g. 4), a plain grid reads better than a lopsided stack.
+          const splitLayout = big.length === 1 && small.length >= 1 && small.length <= 2 && big.length + small.length === cards.length;
 
           const card = ({ i, ks }, fill) => (
             <InitiativeCard key={i.key} i={i} ks={ks} fill={fill}

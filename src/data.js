@@ -239,7 +239,7 @@ export const INITIATIVES = [
         glossary: "EC — Environmental Compensation, imposed on a site found in violation." }
     ] },
 
-  { key: "greening", name: "Greening", ministry: "MOEFCC", owner: "MoEFCC · State forest depts.",
+  { key: "greening", name: "Greening", ministry: "MOHUA", owner: "MoEFCC · State forest depts.",
     footNote: "Plantation and area figures are reported by state greening agencies.",
     l1: [{ name: "% target area greened", num: 964, den: 4340,
       formula: "Actual target area greened ÷ Target area to be greened",
