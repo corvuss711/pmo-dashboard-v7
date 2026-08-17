@@ -60,33 +60,10 @@ export default function Login({ onLogin }) {
 
       <div style={{
         flex: "1 1 46%", minWidth: 0, background: `linear-gradient(165deg, ${ink} 0%, ${panel} 60%, #1c1c1f 100%)`,
-        display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 56px", color: "#fff",
+        display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 56px", color: "#fff",
       }}>
-        {/* <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".14em", color: yellow }}>
-          GOVERNMENT OF NCT OF DELHI
-        </div> */}
-
-        <div>
-          <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-.01em", color: "#fff" }}>
-            Delhi NCR<br />Clean Air Dashboard
-          </div>
-          <div style={{ marginTop: 16, fontSize: 15.5, lineHeight: 1.6, color: "rgba(255,255,255,.72)", maxWidth: 420 }}>
-            A consolidated, real-time view of air quality initiatives, compliance
-            and enforcement progress across the National Capital Region.
-          </div>
-
-          <div style={{ display: "flex", gap: 28, marginTop: 40 }}>
-            {[["7", "Initiatives tracked"], ["24/7", "Live monitoring"], ["NCR", "Multi-state coverage"]].map(([n, l]) => (
-              <div key={l}>
-                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: yellow }}>{n}</div>
-                <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.64)", marginTop: 4 }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.5)" }}>
-          Restricted access · Authorized personnel only
+        <div style={{ fontSize: 38, fontWeight: 800, lineHeight: 1.15, letterSpacing: "-.01em", color: "#fff" }}>
+          Delhi NCR<br />Clean Air Dashboard
         </div>
       </div>
 
@@ -96,7 +73,7 @@ export default function Login({ onLogin }) {
       }}>
         <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 380 }}>
           <div style={{ fontSize: 24, fontWeight: 800, color: C.ink }}>Sign in to your account</div>
-          <div style={{ fontSize: 14, color: C.mute, marginTop: 6 }}>Enter your credentials to access the dashboard.</div>
+          {/* <div style={{ fontSize: 14, color: C.mute, marginTop: 6 }}>Enter your credentials to access the dashboard.</div> */}
 
           {error && (
             <div style={{

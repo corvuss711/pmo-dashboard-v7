@@ -82,9 +82,9 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               </div>
               {splitLayout ? (
                 <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
-                  {card(big[0], true)}
+                  {card(big[0], "row")}
                   <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-                    {small.map((c) => card(c, false))}
+                    {small.map((c) => card(c, "col"))}
                   </div>
                 </div>
               ) : (
@@ -119,7 +119,13 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
         transform: hovered ? "translateY(-2px)" : "none",
         transition: "all 0.15s ease",
         overflow: "hidden",
-        ...(fill ? { flex: "1 1 0", minWidth: 0 } : null)
+        // "row": equal-width column in a horizontal split (needs flex-basis 0 so both
+        //   sides split space evenly regardless of content).
+        // "col": stacked card in a vertical split — flex-basis "auto" starts from its own
+        //   natural content height and only grows into leftover space, so it never gets
+        //   squeezed thinner than its content (which would clip the progress bar).
+        ...(fill === "row" ? { flex: "1 1 0", minWidth: 0 } : null),
+        ...(fill === "col" ? { flex: "1 1 auto", minWidth: 0 } : null)
       }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: hovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
         <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
@@ -130,19 +136,21 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
         <div style={{ flex: 1 }} />
         <span style={{ fontSize: 14, color: C.blue, fontWeight: 700, marginLeft: 4 }}>›</span>
       </div>
-      {ks.map((k, idx) => (
-        <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-            <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>{k.name}</div>
-            <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        {ks.map((k, idx) => (
+          <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>{k.name}</div>
+              <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
+              <Bar view={k} height={7} />
+              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{k.pct}</span>
+            </div>
           </div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
-            <Bar view={k} height={7} />
-            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{k.pct}</span>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </article>
   );
 }
