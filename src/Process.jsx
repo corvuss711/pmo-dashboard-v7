@@ -119,7 +119,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           <span />
         </div>
 
-        <div style={{ padding: "0 26px 16px" }}>
+        <div style={{ padding: "0 26px 64px" }}>
           {l2.length ? (
             <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
               {l2.map((m) => (
@@ -148,7 +148,8 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 26px 14px", flexWrap: "wrap",
-          rowGap: 4, borderTop: `1px solid ${C.line2}` }}>
+          rowGap: 4, borderTop: `1px solid ${C.line2}`, background: "#fff", position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 35,
+          boxShadow: "0 -8px 16px -12px rgba(35,37,39,.45)" }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", color: C.ink }}>STATUS</span>
           {[["#2E7D32", "On track, 75% and above"], ["#E0A800", "Watch, 50–74%"], ["#C0392B", "Delay, below 50%"]].map(([c, t]) => (
             <span key={t} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "#5A5C5E" }}>
