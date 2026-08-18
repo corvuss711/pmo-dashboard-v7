@@ -16,7 +16,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
       <header style={{ display: "flex", alignItems: "center", gap: 18, padding: "12px 24px", background: "#fff",
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 0, zIndex: 40 }}>
-        <img src="/emblem.png" alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
+        <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
