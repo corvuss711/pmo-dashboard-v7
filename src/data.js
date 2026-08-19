@@ -305,7 +305,7 @@ export const INITIATIVES = [
         numL: "installed", denL: "eligible units",
         context: ["Target industries", "Approval issued", "APCD installed"], active: 2,
         glossary: "APCD — Air Pollution Control Device. Exempted units are excluded from the target." },
-      { seg: "ocems", name: "% industries with no red alerts", num: 2142, den: 2357,
+      { seg: "ocems", name: "% industries with no red alerts", num: 2142, den: 2357, noRangeScale: true,
         formula: "Units with no red alerts (as per CPCB norms) ÷ Total target industries",
         rationale: "Identify compliant units for regulatory intervention.", agency: "SPCB", source: "OCEMS Portal",
         numL: "with no red alert", denL: "target industries",
@@ -349,12 +349,12 @@ export const INITIATIVES = [
         formula: "Units with payment released by NCRPB ÷ Applications approved by SPCB", rationale: "Monitor sanction rate.",
         agency: "NCRPB", source: "APCD Portal, PFMS", numL: "paid", denL: "approved by SPCB",
         context: ["SPCB approval", "NCRPB sanction", "Payment released via PFMS"], active: 2 }, 
-      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with OCEMS installed", num: 2295, den: 2357,
+      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with OCEMS installed", num: 2295, den: 2357, noRangeScale: true,
         formula: "Units with OCEMS installed ÷ Total target industries", rationale: "Track implementation progress.",
         agency: "Industry / SPCB", source: "OCEMS Portal", numL: "installed", denL: "target industries",
         context: ["Target industries", "OCEMS installed", "Live data uploaded"], active: 1,
         glossary: "OCEMS — Online Continuous Emission Monitoring System." },
-      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts", num: 2142, den: 2295,
+      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts", num: 2142, den: 2295, noRangeScale: true,
         formula: "Units with no red alerts ÷ Total industries with active OCEMS", rationale: "Identify compliant units for regulatory intervention.",
         agency: "SPCB", source: "OCEMS Portal", numL: "with no red alert", denL: "active OCEMS",
         context: ["OCEMS active", "CPCB norms applied", "No red alert"], active: 2 }
@@ -415,7 +415,10 @@ export function rangeFactor(from, to) {
 
 export function metricView(def, id, key, region, rf) {
   const sl = region && region !== "All-Delhi NCR" ? regionSlice(def, key, region) : { num: def.num, den: def.den };
-  const num = Math.round(sl.num * rf);
+  // noRangeScale: this def's num/den is a real captured API reading, not synthetic demo
+  // data -- applying the date-range "shrink for a narrower window" simulation to it would
+  // fabricate a number that doesn't correspond to anything the real upstream would return.
+  const num = def.noRangeScale ? sl.num : Math.round(sl.num * rf);
   const den = sl.den;
   const has = den > 0;
   if (def.rate) {
