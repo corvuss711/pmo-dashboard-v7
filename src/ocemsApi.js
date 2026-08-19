@@ -8,7 +8,11 @@ async function postJson(path, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.message || "Request failed");
+  if (!res.ok) {
+    const err = new Error(data?.message || "Request failed");
+    err.status = res.status; // lets callers tell "session expired" (401) apart from other failures
+    throw err;
+  }
   return data;
 }
 

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor } from "./data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge } from "./ui.jsx";
+import React, { useEffect, useState } from "react";
+import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "./ui.jsx";
 import { useOcemsIndustry } from "./useOcemsIndustry.js";
 import { withLiveValue, extractL1Counts, extractL2Counts } from "./ocemsLive.js";
 
@@ -12,17 +12,19 @@ const LayersIcon = (
 
 /* Full-page process view: L1 cards pinned across the top, the complete L2 list
    below, metric definitions in a drawer. Region "comparative" is the state tiles. */
-export default function Process({ initiative, region, onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect }) {
-  const [range, setRange] = useState({ from: "2026-02-01", to: "2026-08-11" });
+export default function Process({ initiative, region, onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect, onOcemsExpired }) {
+  const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [seg, setSeg] = useState(initiative.splits ? initiative.splits[0].key : null);
+  useCloseMenuOnOutsideClick(menu, setMenu);
+  useEffect(() => savePersistedRange(range), [range]);
 
   const rf = rangeFactor(range.from, range.to).factor;
   // Live OCEMS data only applies to the "cems" initiative's Delhi NCR aggregate view --
   // the upstream API has no per-state breakdown, so per-region/comparative views stay static.
   const ocemsLiveActive = ocemsConnected && initiative.key === "cems" && region === "All-Delhi NCR";
-  const ocemsData = useOcemsIndustry(ocemsLiveActive, range);
+  const ocemsData = useOcemsIndustry(ocemsLiveActive, range, onOcemsExpired);
   const ocemsL1Counts = ocemsData?.l1 ? extractL1Counts(ocemsData.l1) : null;
   const ocemsL2Counts = ocemsData?.l2 ? extractL2Counts(ocemsData.l2) : null;
 
@@ -85,7 +87,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", background: "#fff",
                 border: `1px solid ${C.blueLine}`, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
                 fontWeight: 600, color: C.blue, cursor: "pointer", whiteSpace: "nowrap" }}>‹ All initiatives</button>
-            <div style={{ position: "relative", flex: "none" }}>
+            <div data-menu-root style={{ position: "relative", flex: "none" }}>
               <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
                 style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: C.blue, color: "#fff",
                   border: 0, borderRadius: 5, fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>

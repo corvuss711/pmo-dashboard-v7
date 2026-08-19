@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Summary from "./Summary.jsx";
 import Comparative from "./Comparative.jsx";
 import Process from "./Process.jsx";
@@ -62,6 +62,10 @@ export default function App() {
     }
   };
 
+  // Stable identity (empty deps) so it's safe to depend on inside
+  // useOcemsIndustry's effect without triggering extra re-fetches.
+  const handleOcemsExpired = useCallback(() => setOcemsConnected(false), []);
+
   const handleOcemsDisconnect = async () => {
     try {
       await ocemsLogout();
@@ -80,6 +84,7 @@ export default function App() {
     ocemsConnected,
     onOpenOcemsLogin: () => setShowOcemsModal(true),
     onOcemsDisconnect: handleOcemsDisconnect,
+    onOcemsExpired: handleOcemsExpired,
   };
   const initiative = INITIATIVES.find((i) => i.key === route.screen);
   const screen = !initiative

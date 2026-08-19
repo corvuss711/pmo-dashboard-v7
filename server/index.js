@@ -201,6 +201,12 @@ async function ocemsDashboardProxy(metric, req, res) {
     });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
+      if (upstreamRes.status === 401) {
+        // The Python backend's session (20-min TTL) has expired -- clear our cookies too,
+        // so /ocems/me stops reporting "connected" for a session that no longer exists.
+        res.clearCookie(OCEMS_SESSION_COOKIE, { ...ocemsCookieOptions, maxAge: undefined });
+        res.clearCookie(OCEMS_EMAIL_COOKIE, { ...ocemsCookieOptions, maxAge: undefined });
+      }
       return res.status(upstreamRes.status).json({ message: data?.detail || "OCEMS request failed" });
     }
     return res.status(200).json(data);

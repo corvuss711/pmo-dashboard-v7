@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor } from "./data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon } from "./ui.jsx";
+import React, { useEffect, useState } from "react";
+import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, useCloseMenuOnOutsideClick } from "./ui.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -11,10 +11,12 @@ const LayersIcon = (
 /* Comparative level: one card per state for a single initiative.
    Shows L1 metric and all L2 process metrics with segment selection (e.g. Trucks/Buses). */
 export default function Comparative({ initiative, onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect }) {
-  const [range, setRange] = useState({ from: "2026-02-01", to: "2026-08-11" });
+  const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [seg, setSeg] = useState(null);
   const [detail, setDetail] = useState(null);
+  useCloseMenuOnOutsideClick(menu, setMenu);
+  useEffect(() => savePersistedRange(range), [range]);
 
   const activeSegKey = seg && initiative.splits?.some((s) => s.key === seg)
     ? seg
@@ -71,7 +73,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           }}>‹ All initiatives</button>
 
         {/* Initiative Selector Dropdown */}
-        <div style={{ position: "relative", flex: "none" }}>
+        <div data-menu-root style={{ position: "relative", flex: "none" }}>
           <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
             style={{
               display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: C.blue, color: "#fff",

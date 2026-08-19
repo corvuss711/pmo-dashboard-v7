@@ -1,19 +1,21 @@
-import React, { useState } from "react";
-import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor } from "./data.js";
-import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge } from "./ui.jsx";
+import React, { useEffect, useState } from "react";
+import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
+import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "./ui.jsx";
 import { useOcemsIndustry } from "./useOcemsIndustry.js";
 import { withLiveValue, extractL1Counts } from "./ocemsLive.js";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
-export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect }) {
-  const [range, setRange] = useState({ from: "2026-02-01", to: "2026-08-11" });
+export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect, onOcemsExpired }) {
+  const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [detail, setDetail] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
+  useCloseMenuOnOutsideClick(menu, setMenu);
+  useEffect(() => savePersistedRange(range), [range]);
 
   const rf = rangeFactor(range.from, range.to).factor;
-  const ocemsData = useOcemsIndustry(ocemsConnected, range);
+  const ocemsData = useOcemsIndustry(ocemsConnected, range, onOcemsExpired);
   const ocemsL1Counts = ocemsData?.l1 ? extractL1Counts(ocemsData.l1) : null;
 
   return (
@@ -23,7 +25,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        {/* {ocemsConnected ? (
+        {ocemsConnected ? (
           <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 4px 8px 8px", fontSize: 12.5, fontWeight: 700, color: "#2E7D32" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E7D32" }} />OCEMS Connected
@@ -39,7 +41,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
             borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
             Connect OCEMS
           </button>
-        )} */}
+        )}
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
@@ -51,7 +53,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 63, zIndex: 30,
         boxShadow: "0 8px 16px -12px rgba(35,37,39,.45)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".12em", color: C.mute }}>INITIATIVE</span>
-        <div style={{ position: "relative" }}>
+        <div data-menu-root style={{ position: "relative" }}>
           <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
             style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: C.blue, color: "#fff",
               border: 0, borderRadius: 6, fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>

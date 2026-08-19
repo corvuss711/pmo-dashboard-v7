@@ -1,5 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { REGIONS, l1Of, l2Of, rangeFactor, PRESETS, fmtDate } from "./data.js";
+
+// Closes whichever dropdown is open (identified by the `menu` state holding
+// its key) when a click lands outside every element marked `data-menu-root`.
+// Pages pass their own `menu`/`setMenu` state; works for any number of
+// independent dropdowns (Dropdown, DateRange, or a page's own inline menu)
+// as long as each one's wrapper carries the `data-menu-root` attribute.
+export function useCloseMenuOnOutsideClick(menu, setMenu) {
+  useEffect(() => {
+    if (!menu) return;
+    const handleClick = (e) => {
+      if (!e.target.closest("[data-menu-root]")) setMenu(null);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menu, setMenu]);
+}
 
 const C = {
   blue: "#1D3F86", blueDark: "#16306a", blueLine: "#A8BADD", blueWash: "#F1F5FF",
@@ -38,7 +54,7 @@ export function InfoButton({ onClick }) {
 
 export function Dropdown({ label, icon, options, open, onToggle, width = 200, align = "right" }) {
   return (
-    <div style={{ position: "relative", flex: "none" }}>
+    <div data-menu-root style={{ position: "relative", flex: "none" }}>
       <button type="button" onClick={onToggle}
         style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: C.blue,
           border: 0, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
@@ -83,8 +99,12 @@ export const PinIcon = (
 
 export function DateRange({ range, setRange, open, onToggle }) {
   const { days } = rangeFactor(range.from, range.to);
+  const now = new Date();
+  // Local-time date string (not toISOString, which shifts to UTC and can land on the wrong day) --
+  // caps selection at "now", not a stale hardcoded date.
+  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   return (
-    <div style={{ position: "relative", flex: "none" }}>
+    <div data-menu-root style={{ position: "relative", flex: "none" }}>
       <button type="button" onClick={onToggle}
         style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: "#fff",
           border: `1px solid ${C.blueLine}`, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
@@ -98,7 +118,7 @@ export function DateRange({ range, setRange, open, onToggle }) {
           {[["From", "from", range.to], ["To", "to", null]].map(([lbl, field]) => (
             <div key={field} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9 }}>
               <label style={{ fontSize: 12, color: C.mute, width: 34 }} htmlFor={`dr-${field}`}>{lbl}</label>
-              <input id={`dr-${field}`} type="date" value={range[field]} min="2026-02-01" max="2026-08-11"
+              <input id={`dr-${field}`} type="date" value={range[field]} min="2026-02-01" max={today}
                 onChange={(e) => {
                   const v = e.target.value; if (!v) return;
                   setRange(field === "from"

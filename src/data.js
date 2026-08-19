@@ -3,6 +3,45 @@ export function track(p) { return p >= 75 ? "#E3EFE4" : p >= 50 ? "#FBF0D6" : "#
 export function statusWord(p) { return p >= 75 ? "On track" : p >= 50 ? "Needs watching" : "Delay"; }
 export const nf = (n) => Math.round(n).toLocaleString("en-IN");
 
+function toDateStr(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+// Default date-range: 1st of the current month through today (local time --
+// avoids the date rolling to the wrong day that toISOString()'s UTC
+// conversion would cause near midnight).
+export function defaultRange() {
+  const now = new Date();
+  return { from: toDateStr(new Date(now.getFullYear(), now.getMonth(), 1)), to: toDateStr(now) };
+}
+
+const DATE_RANGE_STORAGE_KEY = "pmoDateRange";
+
+// Reads a previously-picked date range back from localStorage (shared across
+// Summary/Process/Comparative, so a choice on one page carries to the
+// others and survives a refresh), falling back to defaultRange() if nothing
+// was saved yet or localStorage is unavailable (privacy mode, etc.).
+export function loadPersistedRange() {
+  try {
+    const raw = localStorage.getItem(DATE_RANGE_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.from === "string" && typeof parsed.to === "string") return parsed;
+    }
+  } catch {
+    // Fall through to the default.
+  }
+  return defaultRange();
+}
+
+export function savePersistedRange(range) {
+  try {
+    localStorage.setItem(DATE_RANGE_STORAGE_KEY, JSON.stringify(range));
+  } catch {
+    // Best-effort only.
+  }
+}
+
 /* NCR-level roll-ups. Numerators are summed across Delhi, UP, Rajasthan and Haryana
    from the same state figures the six state dashboards use. */
 export const INITIATIVES = [
@@ -266,7 +305,7 @@ export const INITIATIVES = [
         numL: "installed", denL: "eligible units",
         context: ["Target industries", "Approval issued", "APCD installed"], active: 2,
         glossary: "APCD — Air Pollution Control Device. Exempted units are excluded from the target." },
-      { seg: "ocems", name: "% industries with no red alerts", num: 2028, den: 2357,
+      { seg: "ocems", name: "% industries with no red alerts", num: 2142, den: 2357,
         formula: "Units with no red alerts (as per CPCB norms) ÷ Total target industries",
         rationale: "Identify compliant units for regulatory intervention.", agency: "SPCB", source: "OCEMS Portal",
         numL: "with no red alert", denL: "target industries",
@@ -309,13 +348,13 @@ export const INITIATIVES = [
       { seg: "apcd", stage: 5, stageLabel: "Financial sanction", name: "% payments released by NCRPB", num: 101, den: 666,
         formula: "Units with payment released by NCRPB ÷ Applications approved by SPCB", rationale: "Monitor sanction rate.",
         agency: "NCRPB", source: "APCD Portal, PFMS", numL: "paid", denL: "approved by SPCB",
-        context: ["SPCB approval", "NCRPB sanction", "Payment released via PFMS"], active: 2 },
+        context: ["SPCB approval", "NCRPB sanction", "Payment released via PFMS"], active: 2 }, 
       { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with OCEMS installed", num: 2295, den: 2357,
         formula: "Units with OCEMS installed ÷ Total target industries", rationale: "Track implementation progress.",
         agency: "Industry / SPCB", source: "OCEMS Portal", numL: "installed", denL: "target industries",
         context: ["Target industries", "OCEMS installed", "Live data uploaded"], active: 1,
         glossary: "OCEMS — Online Continuous Emission Monitoring System." },
-      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts", num: 2028, den: 2295,
+      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts", num: 2142, den: 2295,
         formula: "Units with no red alerts ÷ Total industries with active OCEMS", rationale: "Identify compliant units for regulatory intervention.",
         agency: "SPCB", source: "OCEMS Portal", numL: "with no red alert", denL: "active OCEMS",
         context: ["OCEMS active", "CPCB norms applied", "No red alert"], active: 2 }
