@@ -7,6 +7,19 @@ const C = {
   line: "#D4D4CC", line2: "#E2E2DC", paper: "#F6F6F4", bar: "#F3F2EE"
 };
 
+// Small pill marking a metric as fed by a live API (vs. the static dataset).
+export function LiveBadge() {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, padding: "1.5px 7px", marginLeft: 7,
+      background: "#E3EFE4", color: "#2E7D32", borderRadius: 999, fontSize: 9.5, fontWeight: 800,
+      letterSpacing: ".04em", textTransform: "uppercase", verticalAlign: "middle", whiteSpace: "nowrap",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#2E7D32" }} />Live
+    </span>
+  );
+}
+
 export function Bar({ view, height = 9 }) {
   return (
     <div style={{ flex: 1, height, borderRadius: 3, overflow: "hidden", background: view.track }}>

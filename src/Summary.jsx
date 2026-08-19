@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor } from "./data.js";
-import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon } from "./ui.jsx";
+import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge } from "./ui.jsx";
+import { useOcemsIndustry } from "./useOcemsIndustry.js";
+import { withLiveValue, extractL1Counts } from "./ocemsLive.js";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
-export default function Summary({ onNavigate, onLogout, loggingOut }) {
+export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect }) {
   const [range, setRange] = useState({ from: "2026-02-01", to: "2026-08-11" });
   const [menu, setMenu] = useState(null);
   const [detail, setDetail] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
 
   const rf = rangeFactor(range.from, range.to).factor;
+  const ocemsData = useOcemsIndustry(ocemsConnected, range);
+  const ocemsL1Counts = ocemsData?.l1 ? extractL1Counts(ocemsData.l1) : null;
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -19,6 +23,23 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
+        {/* {ocemsConnected ? (
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 4px 8px 8px", fontSize: 12.5, fontWeight: 700, color: "#2E7D32" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E7D32" }} />OCEMS Connected
+            </span>
+            <button type="button" onClick={onOcemsDisconnect} title="Disconnect and re-run the OCEMS login flow"
+              style={{ padding: "6px 12px", border: `1px solid ${C.line}`, borderRadius: 5, background: "#fff",
+                color: C.mute, fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
+              Disconnect
+            </button>
+          </span>
+        ) : (
+          <button type="button" onClick={onOpenOcemsLogin} style={{ padding: "9px 14px", border: `1px solid ${C.blueLine}`,
+            borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
+            Connect OCEMS
+          </button>
+        )} */}
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
@@ -59,7 +80,19 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       <div style={{ padding: "22px 24px 44px", display: "flex", flexDirection: "column", gap: 26 }}>
         {MINISTRIES.map((m) => {
           const cards = INITIATIVES.filter((i) => i.ministry === m.key)
-            .map((i) => ({ i, ks: l1Of(i, "All-Delhi NCR", rf, null, true) }));
+            .map((i) => {
+              let ks = l1Of(i, "All-Delhi NCR", rf, null, true);
+              // Live-data override: the "cems" card's second L1 label ("% industries
+              // with no red alerts") comes from the OCEMS industry-l1 API once connected.
+              if (i.key === "cems" && ocemsL1Counts) {
+                ks = ks.map((k) =>
+                  k.name === "% industries with no red alerts"
+                    ? withLiveValue(k, ocemsL1Counts.num, ocemsL1Counts.den)
+                    : k
+                );
+              }
+              return { i, ks };
+            });
           const big = cards.filter((c) => c.ks.length > 1);
           const small = cards.filter((c) => c.ks.length === 1);
           // One multi-metric card paired with one or two single-metric cards: put the
@@ -141,7 +174,9 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
         {ks.map((k, idx) => (
           <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>{k.name}</div>
+              <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>
+                {k.name}{k.live && <LiveBadge />}
+              </div>
               <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
             </div>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
