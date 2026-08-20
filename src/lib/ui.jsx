@@ -55,6 +55,23 @@ export function ApiIntegratedBadge() {
   );
 }
 
+// Tile-level pill flagging that a tile's live data covers only one state,
+// not the full Delhi NCR region -- currently ICCC (upstream isn't
+// onboarded elsewhere yet, per its footNote in src/lib/data.js). Yellow,
+// matching the app's existing "Watch" status color, since this is a
+// coverage caveat to notice, not a status of the data itself.
+export function DelhiOnlyBadge() {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, padding: "1.5px 8px",
+      background: "#FFF3D6", color: "#8A6D00", borderRadius: 999, fontSize: 9.5, fontWeight: 800,
+      letterSpacing: ".04em", textTransform: "uppercase", verticalAlign: "middle", whiteSpace: "nowrap",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#E0A800" }} />Delhi Only
+    </span>
+  );
+}
+
 export function Bar({ view, height = 9 }) {
   return (
     <div style={{ flex: 1, height, borderRadius: 3, overflow: "hidden", background: view.track }}>

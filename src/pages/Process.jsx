@@ -115,7 +115,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                   borderRadius: 6, boxShadow: "0 12px 32px rgba(0,0,0,.14)", overflow: "hidden", zIndex: 40 }}>
                   {NAV.filter((n) => n.key !== "summary").map((n) => (
                     <button key={n.key} type="button"
-                      onClick={() => { setMenu(null); setDetailId(null); setSeg(null); onNavigate(n.key, region); }}
+                      onClick={() => {
+                        setMenu(null); setDetailId(null); setSeg(null);
+                        // ICCC has no region picker (hidden -- see below) and
+                        // no live source outside Delhi -- switching into it
+                        // from a non-Delhi region would otherwise strand the
+                        // user on all-zero data with no UI to fix it.
+                        onNavigate(n.key, n.key === "iccc" ? "All-Delhi NCR" : region);
+                      }}
                       style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 15px", border: 0,
                         fontFamily: "inherit", fontSize: 13.5, cursor: "pointer", color: C.ink,
                         background: n.key === initiative.key ? C.blueWash : "#fff", fontWeight: n.key === initiative.key ? 700 : 400 }}>
@@ -134,16 +141,22 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                   select: () => { setSeg(v.key); setMenu(null); setDetailId(null); }
                 }))} />
             )}
-            <Dropdown label={region === "All-Delhi NCR" ? "Delhi NCR" : region} icon={PinIcon} open={menu === "region"}
-              onToggle={() => setMenu(menu === "region" ? null : "region")}
-              options={["Delhi NCR", ...REGIONS, "Comparative"].map((r) => ({
-                label: r,
-                selected: r === (region === "All-Delhi NCR" ? "Delhi NCR" : region),
-                select: () => {
-                  setMenu(null); setDetailId(null);
-                  onNavigate(initiative.key, r === "Comparative" ? "comparative" : r === "Delhi NCR" ? "All-Delhi NCR" : r);
-                }
-              }))} />
+            {initiative.key !== "iccc" && (
+              // ICCC has no per-state breakdown at all and isn't onboarded
+              // outside Delhi (see icccLiveActive above) -- a region picker
+              // here would let someone "select" a state with no real data,
+              // so it's hidden entirely rather than just defaulting oddly.
+              <Dropdown label={region === "All-Delhi NCR" ? "Delhi NCR" : region} icon={PinIcon} open={menu === "region"}
+                onToggle={() => setMenu(menu === "region" ? null : "region")}
+                options={["Delhi NCR", ...REGIONS, "Comparative"].map((r) => ({
+                  label: r,
+                  selected: r === (region === "All-Delhi NCR" ? "Delhi NCR" : region),
+                  select: () => {
+                    setMenu(null); setDetailId(null);
+                    onNavigate(initiative.key, r === "Comparative" ? "comparative" : r === "Delhi NCR" ? "All-Delhi NCR" : r);
+                  }
+                }))} />
+            )}
             {initiative.key === "cems" && curSeg?.key === "apcd" ? (
               // APCD only: a real single-date lookup, not a range -- CPCB's
               // cronDate genuinely changes the data (confirmed live), unlike

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
-import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
@@ -186,6 +186,7 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: hovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
         <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
         {API_INTEGRATED_INITIATIVES.has(i.key) && <ApiIntegratedBadge />}
+        {i.key === "iccc" && <DelhiOnlyBadge />}
         {i.note && (
           <span style={{ padding: "3px 8px", border: "1px solid #D2D2CA", background: C.paper, borderRadius: 4,
             fontSize: 11, fontWeight: 700, color: C.mute }}>{i.note}</span>
