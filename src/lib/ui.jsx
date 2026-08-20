@@ -23,7 +23,9 @@ const C = {
   line: "#D4D4CC", line2: "#E2E2DC", paper: "#F6F6F4", bar: "#F3F2EE"
 };
 
-// Small pill marking a metric as fed by a live API (vs. the static dataset).
+// Small pill marking ONE metric's value as actually fed by a live API right
+// now (vs. the static dataset or an honest 0/0 placeholder). Green -- only
+// for a metric that genuinely computed a real number this time.
 export function LiveBadge() {
   return (
     <span style={{
@@ -32,6 +34,23 @@ export function LiveBadge() {
       letterSpacing: ".04em", textTransform: "uppercase", verticalAlign: "middle", whiteSpace: "nowrap",
     }}>
       <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#2E7D32" }} />Live
+    </span>
+  );
+}
+
+// Tile-level pill marking an INITIATIVE as connected to a live API at all --
+// deliberately a different color/label from LiveBadge, since some of its
+// metrics may still show an honest 0/0 (the upstream just doesn't have that
+// field, not a fetch failure). Blue, "API Integrated" -- never claims every
+// value on the tile is live, only that the tile is wired to a real backend.
+export function ApiIntegratedBadge() {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4, padding: "1.5px 8px",
+      background: "#E8EEF9", color: "#1D3F86", borderRadius: 999, fontSize: 9.5, fontWeight: 800,
+      letterSpacing: ".04em", textTransform: "uppercase", verticalAlign: "middle", whiteSpace: "nowrap",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#1D3F86" }} />API Integrated
     </span>
   );
 }
@@ -144,6 +163,45 @@ export function DateRange({ range, setRange, open, onToggle }) {
             })}
           </div>
           <div style={{ fontSize: 12, color: C.faint, marginTop: 11 }}>{days} days of data</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Single-date picker -- distinct from DateRange, used only where a specific
+// date genuinely changes what the backend returns (currently: APCD, since
+// its cronDate was confirmed to change the response; MRS/RR's date range
+// does NOT, CAQM ignores it, so DateRange stays cosmetic there).
+export function SingleDatePicker({ date, setDate, open, onToggle }) {
+  const now = new Date();
+  const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  return (
+    <div data-menu-root style={{ position: "relative", flex: "none" }}>
+      <button type="button" onClick={onToggle}
+        style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 14px", background: "#fff",
+          border: `1px solid ${C.blueLine}`, borderRadius: 5, fontFamily: "inherit", fontSize: 13,
+          fontWeight: 600, color: C.blue, cursor: "pointer", whiteSpace: "nowrap" }}>
+        {CalendarIcon}{fmtDate(date)}<span style={{ opacity: 0.6, fontSize: 10 }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: 44, right: 0, width: 260, background: "#fff", border: "1px solid #D2D2CA",
+          borderRadius: 6, boxShadow: "0 14px 36px rgba(0,0,0,.16)", padding: 14, zIndex: 40 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".1em", color: C.faint }}>APCD DATE</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9 }}>
+            <input type="date" value={date} max={today}
+              onChange={(e) => { const v = e.target.value; if (v) setDate(v); }}
+              style={{ flex: 1, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: C.ink,
+                border: "1px solid #D2D2CA", borderRadius: 4, padding: "6px 8px", outline: "none", cursor: "pointer" }} />
+          </div>
+          <button type="button" onClick={() => setDate(today)}
+            style={{ marginTop: 10, display: "block", width: "100%", padding: "8px 11px", borderRadius: 5, fontFamily: "inherit", fontSize: 13,
+              fontWeight: 600, cursor: "pointer", textAlign: "center",
+              background: date === today ? C.blue : "#fff", color: date === today ? "#fff" : "#5A5C5E",
+              border: `1px solid ${date === today ? C.blue : "#E0E0DA"}` }}>Today</button>
+          <div style={{ fontSize: 12, color: C.faint, marginTop: 11 }}>
+            Shows APCD data as reported for this specific date -- CPCB's cronDate genuinely changes the result.
+          </div>
         </div>
       )}
     </div>

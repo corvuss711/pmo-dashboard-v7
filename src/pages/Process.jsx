@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { C, Bar, InfoButton, Dropdown, DateRange, SingleDatePicker, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
@@ -14,8 +14,16 @@ const LayersIcon = (
 
 /* Full-page process view: L1 cards pinned across the top, the complete L2 list
    below, metric definitions in a drawer. Region "comparative" is the state tiles. */
+// Local calendar date (not toISOString, which shifts to UTC and can land on
+// the wrong day) -- used as the APCD single-date picker's default.
+function todayISO() {
+  const now = new Date();
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+}
+
 export default function Process({ initiative, region, onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
+  const [apcdDate, setApcdDate] = useState(todayISO);
   const [menu, setMenu] = useState(null);
   const [detailId, setDetailId] = useState(null);
   const [seg, setSeg] = useState(initiative.splits ? initiative.splits[0].key : null);
@@ -33,9 +41,10 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
   // source -- fetch regardless of which segment is selected (applyApcdOverrides
   // itself only touches seg === "apcd" items, leaving "ocems" on the static
-  // dataset untouched either way).
+  // dataset untouched either way). Unlike CAQM's range, apcdDate is a real
+  // lookup -- CPCB's cronDate genuinely changes the data returned.
   const apcdLiveActive = initiative.key === "cems";
-  const apcdByKey = useApcdSummary(apcdLiveActive, region);
+  const apcdByKey = useApcdSummary(apcdLiveActive, region, apcdDate);
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
@@ -118,8 +127,16 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                   onNavigate(initiative.key, r === "Comparative" ? "comparative" : r === "Delhi NCR" ? "All-Delhi NCR" : r);
                 }
               }))} />
-            <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
-              onToggle={() => setMenu(menu === "range" ? null : "range")} />
+            {initiative.key === "cems" && curSeg?.key === "apcd" ? (
+              // APCD only: a real single-date lookup, not a range -- CPCB's
+              // cronDate genuinely changes the data (confirmed live), unlike
+              // CAQM's range which is cosmetic for every other initiative.
+              <SingleDatePicker date={apcdDate} setDate={setApcdDate} open={menu === "range"}
+                onToggle={() => setMenu(menu === "range" ? null : "range")} />
+            ) : (
+              <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
+                onToggle={() => setMenu(menu === "range" ? null : "range")} />
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 10, padding: "0 26px 12px", overflowX: "auto" }}>

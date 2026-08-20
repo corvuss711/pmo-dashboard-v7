@@ -8,7 +8,10 @@ import { CPCB_STATE_IDS, aggregateApcdMetrics } from "./apcdLive.js";
 // never here. Returns a
 // { [apcdKey]: { value, numerator, denominator, status } } map, or null
 // while inactive/loading/failed.
-export function useApcdSummary(active, region) {
+// date (YYYY-MM-DD, optional): selects a specific historical snapshot
+// instead of the latest one -- see fetchApcdSummary/moefcc.py. Omit for
+// "latest" (Summary page's usage, which has no date selector).
+export function useApcdSummary(active, region, date) {
   const [byKey, setByKey] = useState(null);
 
   useEffect(() => {
@@ -19,7 +22,7 @@ export function useApcdSummary(active, region) {
     let cancelled = false;
     const stateIds = region === "All-Delhi NCR" ? Object.values(CPCB_STATE_IDS) : [CPCB_STATE_IDS[region]];
 
-    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id)))
+    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id, undefined, date)))
       .then((responses) => {
         if (!cancelled) setByKey(aggregateApcdMetrics(responses));
       })
@@ -31,7 +34,7 @@ export function useApcdSummary(active, region) {
     return () => {
       cancelled = true;
     };
-  }, [active, region]);
+  }, [active, region, date]);
 
   return byKey;
 }
