@@ -137,6 +137,15 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   );
 }
 
+// Tile-level "Live" badge shown once per card, not per metric row. Only
+// initiatives that are FULLY live-integrated get it -- "cems" is excluded
+// even though its "apcd" segment is live, because the tile is labeled
+// "CEMS and APCD for industries" and covers both APCD and OCEMS together,
+// and OCEMS itself has no live source yet (a separate, deferred
+// integration). Showing "Live" on that combined tile would overstate what's
+// actually connected.
+const LIVE_INITIATIVES = new Set(["mrs", "road"]);
+
 function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   return (
     <article data-card
@@ -164,6 +173,7 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
       }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: hovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
         <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
+        {LIVE_INITIATIVES.has(i.key) && <LiveBadge />}
         {i.note && (
           <span style={{ padding: "3px 8px", border: "1px solid #D2D2CA", background: C.paper, borderRadius: 4,
             fontSize: 11, fontWeight: 700, color: C.mute }}>{i.note}</span>
@@ -176,7 +186,10 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
           <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>
-                {k.name}{k.live && <LiveBadge />}
+                {/* No per-metric Live badge here -- see LIVE_INITIATIVES above:
+                    one badge per tile, not per row, so a metric legitimately
+                    showing 0/0 doesn't look "not live" next to one that isn't. */}
+                {k.name}
               </div>
               <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
             </div>
