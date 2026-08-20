@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, useCloseMenuOnOutsideClick } from "./ui.jsx";
+import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -10,7 +10,7 @@ const LayersIcon = (
 
 /* Comparative level: one card per state for a single initiative.
    Shows L1 metric and all L2 process metrics with segment selection (e.g. Trucks/Buses). */
-export default function Comparative({ initiative, onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect }) {
+export default function Comparative({ initiative, onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [seg, setSeg] = useState(null);
@@ -34,23 +34,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        {ocemsConnected ? (
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 4px 8px 8px", fontSize: 12.5, fontWeight: 700, color: "#2E7D32" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E7D32" }} />OCEMS Connected
-            </span>
-            <button type="button" onClick={onOcemsDisconnect} title="Disconnect and re-run the OCEMS login flow"
-              style={{ padding: "6px 12px", border: `1px solid ${C.line}`, borderRadius: 5, background: "#fff",
-                color: C.mute, fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
-              Disconnect
-            </button>
-          </span>
-        ) : (
-          <button type="button" onClick={onOpenOcemsLogin} style={{ padding: "9px 14px", border: `1px solid ${C.blueLine}`,
-            borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
-            Connect OCEMS
-          </button>
-        )}
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{
           display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px solid #D8D8D2",
           borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14, fontFamily: "inherit",

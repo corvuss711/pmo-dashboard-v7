@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
-import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "./ui.jsx";
-import { useOcemsIndustry } from "./useOcemsIndustry.js";
-import { withLiveValue, extractL1Counts } from "./ocemsLive.js";
+import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
+import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
-export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect, onOcemsExpired }) {
+export default function Summary({ onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -15,8 +15,11 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
   useEffect(() => savePersistedRange(range), [range]);
 
   const rf = rangeFactor(range.from, range.to).factor;
-  const ocemsData = useOcemsIndustry(ocemsConnected, range, onOcemsExpired);
-  const ocemsL1Counts = ocemsData?.l1 ? extractL1Counts(ocemsData.l1) : null;
+
+  // Live APCD data for the "CEMS and APCD for industries" card (NCR-wide
+  // aggregate, same as this page's other cards). Always active -- this
+  // page has no region/segment selector to gate on.
+  const apcdByKey = useApcdSummary(true, "All-Delhi NCR");
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -25,23 +28,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        {/* {ocemsConnected ? (
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 4px 8px 8px", fontSize: 12.5, fontWeight: 700, color: "#2E7D32" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E7D32" }} />OCEMS Connected
-            </span>
-            <button type="button" onClick={onOcemsDisconnect} title="Disconnect and re-run the OCEMS login flow"
-              style={{ padding: "6px 12px", border: `1px solid ${C.line}`, borderRadius: 5, background: "#fff",
-                color: C.mute, fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
-              Disconnect
-            </button>
-          </span>
-        ) : (
-          <button type="button" onClick={onOpenOcemsLogin} style={{ padding: "9px 14px", border: `1px solid ${C.blueLine}`,
-            borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
-            Connect OCEMS
-          </button>
-        )} */}
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
@@ -84,15 +70,9 @@ export default function Summary({ onNavigate, onLogout, loggingOut, ocemsConnect
           const cards = INITIATIVES.filter((i) => i.ministry === m.key)
             .map((i) => {
               let ks = l1Of(i, "All-Delhi NCR", rf, null, true);
-              // Live-data override: the "cems" card's second L1 label ("% industries
-              // with no red alerts") comes from the OCEMS industry-l1 API once connected.
-              if (i.key === "cems" && ocemsL1Counts) {
-                ks = ks.map((k) =>
-                  k.name === "% industries with no red alerts"
-                    ? withLiveValue(k, ocemsL1Counts.num, ocemsL1Counts.den)
-                    : k
-                );
-              }
+              // "apcd" segment items get live data; "ocems" items on the same
+              // card pass through untouched (no live source yet).
+              if (i.key === "cems") ks = applyApcdOverrides(ks, apcdByKey);
               return { i, ks };
             });
           const big = cards.filter((c) => c.ks.length > 1);

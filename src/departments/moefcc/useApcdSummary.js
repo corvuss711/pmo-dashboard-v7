@@ -1,0 +1,37 @@
+import { useEffect, useState } from "react";
+import { fetchApcdSummary } from "./apcdApi.js";
+import { CPCB_STATE_IDS, aggregateApcdMetrics } from "./apcdLive.js";
+
+// region: "All-Delhi NCR" (queries all 4 known states and sums) | a specific
+// state name from REGIONS (queries just that one). No login/session
+// involved -- the APCD portal's auth happens only inside the daily cron,
+// never here. Returns a
+// { [apcdKey]: { value, numerator, denominator, status } } map, or null
+// while inactive/loading/failed.
+export function useApcdSummary(active, region) {
+  const [byKey, setByKey] = useState(null);
+
+  useEffect(() => {
+    if (!active) {
+      setByKey(null);
+      return;
+    }
+    let cancelled = false;
+    const stateIds = region === "All-Delhi NCR" ? Object.values(CPCB_STATE_IDS) : [CPCB_STATE_IDS[region]];
+
+    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id)))
+      .then((responses) => {
+        if (!cancelled) setByKey(aggregateApcdMetrics(responses));
+      })
+      .catch((err) => {
+        console.error("[APCD] apcd-summary fetch failed:", err);
+        if (!cancelled) setByKey(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, region]);
+
+  return byKey;
+}

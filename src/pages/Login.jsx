@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { C } from "./ui.jsx";
-import { apiUrl } from "./api.js";
+import { C } from "../lib/ui.jsx";
+import { apiUrl } from "../lib/api.js";
 
 const ink = "#0B0B0C";
 const panel = "#141416";

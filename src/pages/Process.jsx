@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "./data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "./ui.jsx";
-import { useOcemsIndustry } from "./useOcemsIndustry.js";
-import { withLiveValue, extractL1Counts, extractL2Counts } from "./ocemsLive.js";
+import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
+import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
+import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
+import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -12,7 +14,7 @@ const LayersIcon = (
 
 /* Full-page process view: L1 cards pinned across the top, the complete L2 list
    below, metric definitions in a drawer. Region "comparative" is the state tiles. */
-export default function Process({ initiative, region, onNavigate, onLogout, loggingOut, ocemsConnected, onOpenOcemsLogin, onOcemsDisconnect, onOcemsExpired }) {
+export default function Process({ initiative, region, onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
   const [detailId, setDetailId] = useState(null);
@@ -21,30 +23,36 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   useEffect(() => savePersistedRange(range), [range]);
 
   const rf = rangeFactor(range.from, range.to).factor;
-  // Live OCEMS data only applies to the "cems" initiative's Delhi NCR aggregate view --
-  // the upstream API has no per-state breakdown, so per-region/comparative views stay static.
-  const ocemsLiveActive = ocemsConnected && initiative.key === "cems" && region === "All-Delhi NCR";
-  const ocemsData = useOcemsIndustry(ocemsLiveActive, range, onOcemsExpired);
-  const ocemsL1Counts = ocemsData?.l1 ? extractL1Counts(ocemsData.l1) : null;
-  const ocemsL2Counts = ocemsData?.l2 ? extractL2Counts(ocemsData.l2) : null;
+
+  // Live CAQM data for MRS/Road Repair. MRS's L1/L2 items are untagged and get
+  // rescaled by road-width segment (segApply) -- CAQM's response isn't
+  // width-segmented, so only apply live data on the default "all widths" segment.
+  const caqmLiveActive = initiative.key === "road" || (initiative.key === "mrs" && (!seg || seg === initiative.splits[0].key));
+  const caqmByKey = useMrsRrSummary(caqmLiveActive, region, range);
+
+  // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
+  // source -- fetch regardless of which segment is selected (applyApcdOverrides
+  // itself only touches seg === "apcd" items, leaving "ocems" on the static
+  // dataset untouched either way).
+  const apcdLiveActive = initiative.key === "cems";
+  const apcdByKey = useApcdSummary(apcdLiveActive, region);
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
-  if (ocemsL1Counts) {
-    l1 = l1.map((k) =>
-      k.name === "% industries with no red alerts" ? withLiveValue(k, ocemsL1Counts.num, ocemsL1Counts.den) : k
-    );
+  if (initiative.key === "mrs" || initiative.key === "road") {
+    // Unconditional -- MRS/Road Repair must never fall back to the static
+    // dataset, including while caqmByKey hasn't loaded yet (e.g. a
+    // road-width segment other than "all", where no fetch even runs) --
+    // applyCaqmOverrides forces an honest 0/0 there.
+    l1 = applyCaqmOverrides(l1, initiative.key, "L1", caqmByKey);
+    l2 = applyCaqmOverrides(l2, initiative.key, "L2", caqmByKey);
   }
-  if (ocemsL2Counts) {
-    l2 = l2.map((k) => {
-      if (k.name === "% industries with OCEMS installed") {
-        return withLiveValue(k, ocemsL2Counts.ocemsInstalled.num, ocemsL2Counts.ocemsInstalled.den);
-      }
-      if (k.name === "% industries with no red alerts") {
-        return withLiveValue(k, ocemsL2Counts.noRedAlerts.num, ocemsL2Counts.noRedAlerts.den);
-      }
-      return k;
-    });
+  if (initiative.key === "cems") {
+    // Same unconditional rule -- the "apcd" segment must never fall back to
+    // the static dataset. "ocems" items pass through applyApcdOverrides
+    // untouched (no live source yet).
+    l1 = applyApcdOverrides(l1, apcdByKey);
+    l2 = applyApcdOverrides(l2, apcdByKey);
   }
   const detail = [...l1, ...l2].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);
@@ -56,23 +64,6 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        {/* {ocemsConnected ? (
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 4px 8px 8px", fontSize: 12.5, fontWeight: 700, color: "#2E7D32" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E7D32" }} />OCEMS Connected
-            </span>
-            <button type="button" onClick={onOcemsDisconnect} title="Disconnect and re-run the OCEMS login flow"
-              style={{ padding: "6px 12px", border: `1px solid ${C.line}`, borderRadius: 5, background: "#fff",
-                color: C.mute, fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" }}>
-              Disconnect
-            </button>
-          </span>
-        ) : (
-          <button type="button" onClick={onOpenOcemsLogin} style={{ padding: "9px 14px", border: `1px solid ${C.blueLine}`,
-            borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
-            Connect OCEMS
-          </button>
-        )} */}
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
