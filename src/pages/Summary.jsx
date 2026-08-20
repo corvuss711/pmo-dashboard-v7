@@ -3,6 +3,8 @@ import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, sa
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
+import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
+import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
@@ -20,6 +22,17 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // aggregate, same as this page's other cards). Always active -- this
   // page has no region/segment selector to gate on.
   const apcdByKey = useApcdSummary(true, "All-Delhi NCR");
+
+  // Live CAQM data for MRS/Road Repair. Always active here (unlike
+  // Process.jsx, which gates on the road-width segment) -- this page's L1
+  // cards use l1Of's raw=true path (ini.l1 unfiltered by segApply), which is
+  // exactly the "all widths combined" view CAQM's response already matches.
+  // range is still passed to satisfy the fetch signature/Node's required
+  // fromDate/toDate query params, but the date picker is cosmetic for
+  // MRS/RR -- CAQM's own totals don't change with the requested window
+  // (tested), so the backend always serves the latest daily snapshot
+  // regardless of what range is selected here.
+  const caqmByKey = useMrsRrSummary(true, "All-Delhi NCR", range);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -73,6 +86,12 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               // "apcd" segment items get live data; "ocems" items on the same
               // card pass through untouched (no live source yet).
               if (i.key === "cems") ks = applyApcdOverrides(ks, apcdByKey);
+              // Unconditional -- MRS/Road Repair must never fall back to the
+              // static dataset. Both of MRS's L1 tiles ("% MRS deployed",
+              // "% route covered") have no matching CAQM rule (confirmed
+              // against the actual API builder's own cannot-compute list),
+              // so applyCaqmOverrides forces an honest 0/0 for them here too.
+              if (i.key === "mrs" || i.key === "road") ks = applyCaqmOverrides(ks, i.key, "L1", caqmByKey);
               return { i, ks };
             });
           const big = cards.filter((c) => c.ks.length > 1);
