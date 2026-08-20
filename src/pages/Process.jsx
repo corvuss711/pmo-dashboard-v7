@@ -5,6 +5,8 @@ import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
+import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
+import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,6 +48,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const apcdLiveActive = initiative.key === "cems";
   const apcdByKey = useApcdSummary(apcdLiveActive, region, apcdDate);
 
+  // Live ICCC data (Delhi dust control portal). No per-state breakdown at
+  // all upstream -- only fetch when viewing Delhi/All-Delhi NCR (ICCC isn't
+  // onboarded elsewhere yet), never for another single state or Comparative,
+  // so we don't misleadingly show the same NCR figure under an unrelated
+  // state. No date-range capability either -- range is irrelevant here.
+  const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
+  const icccByKey = useIcccSummary(icccLiveActive);
+
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
   if (initiative.key === "mrs" || initiative.key === "road") {
@@ -62,6 +72,13 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     // untouched (no live source yet).
     l1 = applyApcdOverrides(l1, apcdByKey);
     l2 = applyApcdOverrides(l2, apcdByKey);
+  }
+  if (initiative.key === "iccc") {
+    // Unconditional too -- the 3 computable ICCC metrics never fall back to
+    // static, and the 2 no-source metrics always show "Data not provided"
+    // regardless of region/fetch state (see applyIcccOverrides).
+    l1 = applyIcccOverrides(l1, icccByKey);
+    l2 = applyIcccOverrides(l2, icccByKey);
   }
   const detail = [...l1, ...l2].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);

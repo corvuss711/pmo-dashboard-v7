@@ -152,6 +152,24 @@ metrics.get("/apcd-summary", async (req, res) => {
   }
 });
 
+// ICCC (MoEFCC/Delhi dust control): no params at all -- the upstream has no
+// per-state breakdown and no date-range capability. DB-only read, same as
+// apcd-summary -- the Python backend's cron is the only thing that ever
+// calls the ICCC API directly.
+metrics.get("/iccc-summary", async (_req, res) => {
+  try {
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/iccc-summary`);
+    const data = await upstreamRes.json().catch(() => ({}));
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).json({ message: data?.detail || "ICCC metrics request failed" });
+    }
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("ICCC iccc-summary proxy error:", err);
+    return res.status(502).json({ message: "Unable to reach metrics service" });
+  }
+});
+
 // Answers both unprefixed (dev, or a plain proxy_pass with no rewrite) and /phase3-prefixed
 // (prod behind Nginx at the /phase3 path) requests with the same routes.
 app.use("/api", api);

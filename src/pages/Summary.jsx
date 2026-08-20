@@ -3,6 +3,8 @@ import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, sa
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
+import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
+import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 
@@ -33,6 +35,10 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // (tested), so the backend always serves the latest daily snapshot
   // regardless of what range is selected here.
   const caqmByKey = useMrsRrSummary(true, "All-Delhi NCR", range);
+
+  // Live ICCC data. Always active -- this page only ever shows the
+  // NCR-wide combined view, which is the only view ICCC's upstream has.
+  const icccByKey = useIcccSummary(true);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -92,6 +98,11 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               // against the actual API builder's own cannot-compute list),
               // so applyCaqmOverrides forces an honest 0/0 for them here too.
               if (i.key === "mrs" || i.key === "road") ks = applyCaqmOverrides(ks, i.key, "L1", caqmByKey);
+              // ICCC's single L1 tile: 3 of 5 metrics are live, but this one
+              // ("% sites complying with identified interventions") is
+              // computable -- applyIcccOverrides handles the no-source ones
+              // internally too, so this is safe even for the ones that aren't.
+              if (i.key === "iccc") ks = applyIcccOverrides(ks, icccByKey);
               return { i, ks };
             });
           const big = cards.filter((c) => c.ks.length > 1);
@@ -145,7 +156,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // excluded even though its "apcd" segment is live, because the tile is
 // labeled "CEMS and APCD for industries" and covers both together, and
 // OCEMS itself has no live source yet (a separate, deferred integration).
-const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road"]);
+const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc"]);
 
 function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   return (
