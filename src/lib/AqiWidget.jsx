@@ -85,9 +85,11 @@ const DUMMY_BREAKDOWN = [
 
 const X_AXIS_LABELS = ["2 Feb", "26 Feb", "22 Mar", "15 Apr", "9 May", "2 Jun", "26 Jun", "20 Jul"];
 
-// Header pill -- click opens the modal. Dummy "live-looking" reading, same
-// caveat as the module docstring above.
-export function AqiWidget({ onClick }) {
+// Header pill -- display only for now (not clickable, modal disabled per
+// request 2026-08-21; AqiModal below is kept intact, just not wired up, so
+// re-enabling later is a one-line change in Summary.jsx/Process.jsx).
+// Dummy "live-looking" reading, same caveat as the module docstring above.
+export function AqiWidget() {
   const sparkline = DUMMY_TREND30.filter((_, i) => i % 8 === 0).slice(-8);
   const min = Math.min(...sparkline), max = Math.max(...sparkline);
   const pts = sparkline.map((v, i) => {
@@ -97,10 +99,10 @@ export function AqiWidget({ onClick }) {
   }).join(" ");
 
   return (
-    <button type="button" onClick={onClick} style={{
+    <div style={{
       display: "flex", alignItems: "center", gap: 12, padding: "7px 16px",
       border: `1px solid ${C.blueLine}`, borderRadius: 999, background: "#fff",
-      cursor: "pointer", fontFamily: "inherit",
+      fontFamily: "inherit",
     }}>
       <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#2E7D32" }} />
@@ -119,7 +121,7 @@ export function AqiWidget({ onClick }) {
           <polyline points={pts} fill="none" stroke="#2E7D32" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
-    </button>
+    </div>
   );
 }
 
