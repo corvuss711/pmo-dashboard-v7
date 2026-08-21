@@ -5,9 +5,11 @@ import { fetchIcccSummary } from "./icccApi.js";
 // (see fetchIcccSummary/app/departments/moefcc.py). Callers gate `active`
 // themselves (e.g. only fetch when viewing Delhi/All-Delhi NCR, since ICCC
 // isn't onboarded elsewhere -- see the "iccc" initiative's footNote in
-// src/lib/data.js). Returns a { [icccKey]: { value, numerator, denominator,
-// status } } map, or null while inactive/loading/failed.
-export function useIcccSummary(active) {
+// src/lib/data.js). fromDate/toDate (both required together): EXACT match
+// against a stored window -- see fetchIcccSummary. Omit both for latest.
+// Returns a { [icccKey]: { value, numerator, denominator, status } } map,
+// or null while inactive/loading/failed.
+export function useIcccSummary(active, fromDate, toDate) {
   const [byKey, setByKey] = useState(null);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export function useIcccSummary(active) {
     }
     let cancelled = false;
 
-    fetchIcccSummary()
+    fetchIcccSummary(fromDate, toDate)
       .then((data) => {
         if (cancelled) return;
         const map = {};
@@ -32,7 +34,7 @@ export function useIcccSummary(active) {
     return () => {
       cancelled = true;
     };
-  }, [active]);
+  }, [active, fromDate, toDate]);
 
   return byKey;
 }

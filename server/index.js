@@ -156,9 +156,11 @@ metrics.get("/apcd-summary", async (req, res) => {
 // per-state breakdown and no date-range capability. DB-only read, same as
 // apcd-summary -- the Python backend's cron is the only thing that ever
 // calls the ICCC API directly.
-metrics.get("/iccc-summary", async (_req, res) => {
+metrics.get("/iccc-summary", async (req, res) => {
   try {
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/iccc-summary`);
+    const { fromDate, toDate } = req.query;
+    const qs = fromDate && toDate ? `?${new URLSearchParams({ fromDate, toDate })}` : "";
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/iccc-summary${qs}`);
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "ICCC metrics request failed" });

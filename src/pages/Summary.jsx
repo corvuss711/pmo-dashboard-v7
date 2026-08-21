@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { AqiWidget, AqiModal } from "../lib/AqiWidget.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
@@ -39,6 +40,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // Live ICCC data. Always active -- this page only ever shows the
   // NCR-wide combined view, which is the only view ICCC's upstream has.
   const icccByKey = useIcccSummary(true);
+  const [aqiOpen, setAqiOpen] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -47,12 +49,15 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
+        <AqiWidget onClick={() => setAqiOpen(true)} />
+        <div style={{ flex: 1 }} />
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
           {loggingOut && <SpinnerIcon />}{loggingOut ? "Signing out…" : "Sign out"}
         </button>
       </header>
+      {aqiOpen && <AqiModal onClose={() => setAqiOpen(false)} />}
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, rowGap: 10, flexWrap: "wrap", padding: "14px 24px", background: C.bar,
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 63, zIndex: 30,

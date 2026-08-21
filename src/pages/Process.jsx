@@ -7,6 +7,7 @@ import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
+import { AqiWidget, AqiModal } from "../lib/AqiWidget.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +28,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const [range, setRange] = useState(loadPersistedRange);
   const [apcdDate, setApcdDate] = useState(todayISO);
   const [menu, setMenu] = useState(null);
+  const [aqiOpen, setAqiOpen] = useState(false);
   const [detailId, setDetailId] = useState(null);
   const [seg, setSeg] = useState(initiative.splits ? initiative.splits[0].key : null);
   useCloseMenuOnOutsideClick(menu, setMenu);
@@ -52,9 +54,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // all upstream -- only fetch when viewing Delhi/All-Delhi NCR (ICCC isn't
   // onboarded elsewhere yet), never for another single state or Comparative,
   // so we don't misleadingly show the same NCR figure under an unrelated
-  // state. No date-range capability either -- range is irrelevant here.
+  // state. Unlike the earlier assumption, ICCC's date range genuinely
+  // scopes the totals (confirmed 2026-08-21) -- range.from/range.to are
+  // sent as an EXACT fromDate/toDate match against a stored window (see
+  // useIcccSummary), not just an "as of" lookup. A range that was never
+  // actually fetched (daily cron only stores ICCC_FROM_DATE-to-today) 404s
+  // and applyIcccOverrides below forces an honest 0/0, same as always.
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
-  const icccByKey = useIcccSummary(icccLiveActive);
+  const icccByKey = useIcccSummary(icccLiveActive, range.from, range.to);
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
@@ -90,12 +97,15 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
+        <AqiWidget onClick={() => setAqiOpen(true)} />
+        <div style={{ flex: 1 }} />
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
           {loggingOut && <SpinnerIcon />}{loggingOut ? "Signing out…" : "Sign out"}
         </button>
       </header>
+      {aqiOpen && <AqiModal onClose={() => setAqiOpen(false)} />}
 
       <div style={{ background: "#fff", borderTop: `1px solid ${C.line}` }}>
         <div style={{ position: "sticky", top: 63, zIndex: 30, background: "#fff", boxShadow: "0 8px 16px -12px rgba(35,37,39,.45)" }}>
