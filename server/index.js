@@ -130,7 +130,7 @@ metrics.get("/mrs-rr-summary", async (req, res) => {
 // portal's client_id/secret auth happens only inside the daily cron on the
 // Python backend, never in this browser-facing proxy.
 metrics.get("/apcd-summary", async (req, res) => {
-  const { stateId, cityId, date } = req.query;
+  const { stateId, cityId, date, monthStart } = req.query;
   if (!stateId) {
     return res.status(400).json({ message: "stateId is required" });
   }
@@ -139,6 +139,7 @@ metrics.get("/apcd-summary", async (req, res) => {
       stateId,
       ...(cityId != null ? { cityId } : {}),
       ...(date ? { date } : {}),
+      ...(monthStart ? { monthStart } : {}),
     });
     const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary?${qs}`);
     const data = await upstreamRes.json().catch(() => ({}));

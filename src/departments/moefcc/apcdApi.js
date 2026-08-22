@@ -7,11 +7,17 @@ import { apiUrl } from "../../lib/api.js";
 // cron-fetched snapshot. No credentials needed here either: the APCD
 // portal's client_id/secret auth happens only inside the daily cron/backfill
 // scripts, never in this browser-facing call.
-export async function fetchApcdSummary(stateId, cityId, date) {
+// monthStart (YYYY-MM-DD, optional, mutually exclusive with date): returns
+// this month's DELTA instead of a cumulative snapshot -- see
+// moefcc.py's get_delta_since for why APCD needs a derived delta rather
+// than a direct range query (its snapshots are cumulative-as-of-date, not
+// period-scoped like ICCC's).
+export async function fetchApcdSummary(stateId, cityId, date, monthStart) {
   const qs = new URLSearchParams({
     stateId,
     ...(cityId != null ? { cityId } : {}),
     ...(date ? { date } : {}),
+    ...(monthStart ? { monthStart } : {}),
   });
   const res = await fetch(apiUrl(`/metrics/apcd-summary?${qs}`));
   const data = await res.json().catch(() => ({}));

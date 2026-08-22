@@ -114,6 +114,50 @@ export const INITIATIVES = [
         rationale: "Track NCRPB payment backlog for fuel vouchers.", agency: "NCRPB", source: "Not yet identified",
         numL: "released", denL: "claims approved",
         context: ["OMC / CGD validate usage", "MoPNG validates data", "NCRPB releases payment"], active: 2 }
+    ],
+    // L3: SLA-breach process metrics, sourced from the scheme's formula sheet
+    // (2026-08-22). #5 in that sheet's numbering was cut off the source
+    // screenshot -- only #1-4 and #6-8 are entered here; #5 to be added once
+    // its row (name/formula/rationale/agency/source) is available. Every
+    // num/den is 0 -- none of these have a live source hooked up yet, same
+    // "no data" convention as the rest of this file's not-yet-integrated
+    // metrics.
+    l3: [
+      { stage: 2, stageLabel: "Scrap vs sell", name: "% NOC approval pending at RTO (> SLA)", num: 0, den: 0,
+        formula: "No. of NOCs pending at RTO > SLA ÷ No. of NOC applications",
+        rationale: "Track delays in NOC for other-state transfer at RTOs.", agency: "RTO", source: "VAHAN",
+        numL: "NOCs pending > SLA", denL: "NOC applications",
+        context: ["NOC application submitted", "NOC pending at RTO", "NOC approved"], active: 1 },
+      { stage: 4, stageLabel: "Interest subvention", name: "% Interest subvention approvals pending by nodal bank (>SLA)", num: 0, den: 0,
+        formula: "No. of interest subvention approvals pending by nodal bank > SLA ÷ No. of approved loans",
+        rationale: "Track Nodal Bank approval delays.", agency: "Nodal Bank", source: "Nodal Bank portal",
+        numL: "approvals pending > SLA", denL: "approved loans",
+        context: ["Lender submits claim", "Approval pending at Nodal Bank", "Nodal Bank approves"], active: 1 },
+      { stage: 4, stageLabel: "Interest subvention", name: "% Interest subvention payments pending by NCRPB (>SLA)", num: 0, den: 0,
+        formula: "No. of interest subvention payments pending > SLA ÷ No. of approved interest subvention claims",
+        rationale: "Track NCRPB payment delays.", agency: "NCRPB", source: "Not yet identified",
+        numL: "payments pending > SLA", denL: "approved claims",
+        context: ["Nodal Bank approves", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 },
+      { stage: 5, stageLabel: "One-time claim (OTC)", name: "% One-time claims payment pending by NCRPB (>SLA)", num: 0, den: 0,
+        formula: "No. of OTC payments pending by NCRPB > SLA ÷ No. of approved OTC claims by MoRTH",
+        rationale: "Detect pendency for payment approvals by NCRPB.", agency: "NCRPB", source: "Not yet identified",
+        numL: "OTC payments pending > SLA", denL: "approved OTC claims",
+        context: ["MoRTH approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 },
+      { stage: 6, stageLabel: "Fuel voucher", name: "% Fuel voucher validations pending by OMCs/CGD (>SLA)", num: 0, den: 0,
+        formula: "No. of fuel voucher claims pending validation by OMC/CGD > SLA ÷ No. of fuel voucher claims",
+        rationale: "Detect OMC/MoRTH validation delays for fuel vouchers.", agency: "OMCs, MoRTH", source: "Not yet identified",
+        numL: "validations pending > SLA", denL: "fuel voucher claims",
+        context: ["Fuel voucher claim submitted", "Validation pending at OMC/CGD", "Claim validated"], active: 1 },
+      { stage: 6, stageLabel: "Fuel voucher", name: "% Fuel voucher approvals pending by MoPNG (>SLA)", num: 0, den: 0,
+        formula: "No. of fuel voucher approvals pending by MoPNG > SLA ÷ No. of validated fuel voucher claims",
+        rationale: "Detect MoPNG payment approval delays.", agency: "MoPNG", source: "Not yet identified",
+        numL: "approvals pending > SLA", denL: "validated claims",
+        context: ["Claim validated by OMC/CGD", "Approval pending at MoPNG", "MoPNG approves"], active: 1 },
+      { stage: 6, stageLabel: "Fuel voucher", name: "% Fuel voucher payments pending by NCRPB (>SLA)", num: 0, den: 0,
+        formula: "No. of fuel voucher payments pending by NCRPB > SLA ÷ No. of approved fuel voucher claims",
+        rationale: "Track NCRPB payment backlog for fuel vouchers.", agency: "NCRPB", source: "Not yet identified",
+        numL: "payments pending > SLA", denL: "approved claims",
+        context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 }
     ] },
 
   { key: "green-contribution", name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",
@@ -358,6 +402,38 @@ export const INITIATIVES = [
         formula: "Units with no red alerts ÷ Total industries with active OCEMS", rationale: "Identify compliant units for regulatory intervention.",
         agency: "SPCB", source: "OCEMS Portal", numL: "with no red alert", denL: "active OCEMS",
         context: ["OCEMS active", "CPCB norms applied", "No red alert"], active: 2 }
+    ],
+    // L3: SLA-breach process metrics for the APCD scheme only (sourced from
+    // the scheme's formula sheet, 2026-08-22) -- all seg: "apcd" so they're
+    // hidden when the "OCEMS installation" segment is selected, same as the
+    // rest of this tile's apcd-only rows. num/den both 0 -- no live source
+    // wired up yet, same "no data" convention as everywhere else.
+    l3: [
+      { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% applications where SAC reviews pending (>SLA)", num: 0, den: 0,
+        formula: "No. of applications pending SAC review > 5-day SLA ÷ No. of applications submitted",
+        rationale: "Track committee approval delays.", agency: "SAC", source: "APCD Portal",
+        numL: "SAC reviews pending > SLA", denL: "applications submitted",
+        context: ["Application submitted", "SAC review pending", "SAC review completed"], active: 1 },
+      { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% SPCB in-principle approval pending (>SLA)", num: 0, den: 0,
+        formula: "No. of applications pending SPCB approval > 5-day SLA ÷ No. of applications approved by SAC",
+        rationale: "Detect approval bottlenecks.", agency: "SPCB", source: "APCD Portal",
+        numL: "SPCB approvals pending > SLA", denL: "approved by SAC",
+        context: ["SAC review completed", "SPCB approval pending", "SPCB approval issued"], active: 1 },
+      { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% Vendor installations pending (>SLA)", num: 0, den: 0,
+        formula: "No. of industries with Certificate of Installation not uploaded > SLA ÷ Total applications approved",
+        rationale: "Track installation delays.", agency: "Vendor / Industrial Unit", source: "APCD Portal",
+        numL: "installations pending > SLA", denL: "applications approved",
+        context: ["SPCB approval issued", "Certificate of Installation pending", "Certificate uploaded"], active: 1 },
+      { seg: "apcd", stage: 4, stageLabel: "Technical approval", name: "% on-ground verification and / or financial approval pending by SPCB (>SLA)", num: 0, den: 0,
+        formula: "No. of installations pending SPCB verification & fin. approval > 14-day SLA ÷ No. of completed installations",
+        rationale: "Detect SPCB verification & approval delays.", agency: "SPCB", source: "APCD Portal",
+        numL: "verification/approval pending > SLA", denL: "completed installations",
+        context: ["Certificate uploaded", "SPCB verification pending", "SPCB financial approval"], active: 1 },
+      { seg: "apcd", stage: 5, stageLabel: "Financial sanction", name: "% payment approvals pending by NCRPB (>SLA)", num: 0, den: 0,
+        formula: "No. of applications pending NCRPB payment approval > 7-day SLA ÷ No. of approved installations",
+        rationale: "Monitor sanction delays.", agency: "NCRPB", source: "APCD Portal",
+        numL: "payment approvals pending > SLA", denL: "approved installations",
+        context: ["SPCB financial approval", "NCRPB payment approval pending", "NCRPB releases payment"], active: 1 }
     ] }
 ];
 
@@ -459,6 +535,11 @@ export const l1Of = (ini, region, rf, seg, raw) =>
   (raw ? ini.l1 : segApply(ini.l1, ini, seg)).map((d, i) => metricView(d, "L1-" + i, ini.key, region, rf));
 export const l2Of = (ini, region, rf, seg, raw) =>
   (raw ? ini.metrics : segApply(ini.metrics, ini, seg)).map((d, i) => metricView(d, "L2-" + i, ini.key, region, rf));
+// L3: SLA-breach process metrics (e.g. "% approvals pending by X > SLA"), one
+// level more granular than L2. Only Parivartan has these defined so far --
+// initiatives with no `l3` array just get an empty list here.
+export const l3Of = (ini, region, rf, seg, raw) =>
+  (raw ? (ini.l3 || []) : segApply(ini.l3 || [], ini, seg)).map((d, i) => metricView(d, "L3-" + i, ini.key, region, rf));
 
 export const PRESETS = [
   { label: "Last 30 days", from: "2026-07-13", to: "2026-08-11" },

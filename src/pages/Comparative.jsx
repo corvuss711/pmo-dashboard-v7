@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
-import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, PinIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,6 +94,29 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             options={initiative.splits.map((v) => ({
               label: v.label, selected: v.key === curSeg.key,
               select: () => { setSeg(v.key); setMenu(null); }
+            }))} />
+        )}
+
+        {/* State/region picker -- previously only available on Process.jsx,
+            leaving no way to jump from Comparative straight to a single
+            state's process view without going back through Summary first.
+            "Comparative" itself is always the selected label here, since
+            this page has no single-region concept of its own; picking any
+            other option navigates to Process.jsx for that region. Hidden
+            for ICCC, same as Process.jsx -- no per-state breakdown upstream
+            at all (and Process.jsx's own picker never offers "Comparative"
+            for ICCC, so this page shouldn't normally be reached for it). */}
+        {initiative.key !== "iccc" && (
+          <Dropdown label="Comparative" icon={PinIcon} open={menu === "region"}
+            onToggle={() => setMenu(menu === "region" ? null : "region")}
+            options={["Delhi NCR", "Comparative", ...REGIONS].map((r) => ({
+              label: r,
+              selected: r === "Comparative",
+              select: () => {
+                setMenu(null);
+                if (r === "Comparative") return;
+                onNavigate(initiative.key, r === "Delhi NCR" ? "All-Delhi NCR" : r);
+              }
             }))} />
         )}
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { INITIATIVES, MINISTRIES, NAV, l1Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { AqiWidget } from "../lib/AqiWidget.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
@@ -40,6 +40,26 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // Live ICCC data. Always active -- this page only ever shows the
   // NCR-wide combined view, which is the only view ICCC's upstream has.
   const icccByKey = useIcccSummary(true);
+
+  // "This Month" bars (added 2026-08-22): a fixed 1st-of-current-month
+  // through today window, independent of whatever the page's own DateRange
+  // picker is set to -- "this month" is a standing concept, not something
+  // the user should be able to pick a different window for. Only APCD and
+  // ICCC get a genuinely separate month-scoped query here:
+  //   - APCD's cronDate snapshots are cumulative-as-of-date, not
+  //     period-scoped, so "this month" is a DELTA (see moefcc.py's
+  //     get_delta_since) -- monthStart tells the backend where to diff from.
+  //   - ICCC's fromDate/toDate genuinely scopes the upstream's own totals
+  //     (confirmed 2026-08-21), so this is a real, different-from-cumulative
+  //     range query, served by the same lazy-fetch-and-cache path Process.jsx
+  //     already uses for custom ranges.
+  // MRS/RR (CAQM) deliberately gets NO separate query -- CAQM's own totals
+  // don't change with the requested date window (proven via live testing),
+  // so its "This Month" bar reuses the exact same cumulative value; this is
+  // documented on the tile itself, not hidden as if it were a bug.
+  const thisMonth = defaultRange();
+  const apcdMonthByKey = useApcdSummary(true, "All-Delhi NCR", undefined, thisMonth.from);
+  const icccMonthByKey = useIcccSummary(true, thisMonth.from, thisMonth.to);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -89,7 +109,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
       <div style={{ padding: "22px 24px 44px", display: "flex", flexDirection: "column", gap: 26 }}>
         {MINISTRIES.map((m) => {
-          const cards = INITIATIVES.filter((i) => i.ministry === m.key)
+          const cards = INITIATIVES.filter((i) => i.ministry === m.key && i.key !== "green-contribution")
             .map((i) => {
               let ks = l1Of(i, "All-Delhi NCR", rf, null, true);
               // "apcd" segment items get live data; "ocems" items on the same
@@ -106,7 +126,19 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               // computable -- applyIcccOverrides handles the no-source ones
               // internally too, so this is safe even for the ones that aren't.
               if (i.key === "iccc") ks = applyIcccOverrides(ks, icccByKey);
-              return { i, ks };
+
+              // "This Month" variant. Defaults to mirroring `ks` (static
+              // defs stay an honest 0/0 either way; MRS/Road Repair mirror
+              // on purpose -- see thisMonth's comment above). Only APCD and
+              // ICCC get a fresh static base + a month-scoped override.
+              let ksMonth = ks;
+              if (i.key === "cems") {
+                ksMonth = applyApcdOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
+              }
+              if (i.key === "iccc") {
+                ksMonth = applyIcccOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
+              }
+              return { i, ks, ksMonth };
             });
           const big = cards.filter((c) => c.ks.length > 1);
           const small = cards.filter((c) => c.ks.length === 1);
@@ -115,8 +147,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           // With more cards than that (e.g. 4), a plain grid reads better than a lopsided stack.
           const splitLayout = big.length === 1 && small.length >= 1 && small.length <= 2 && big.length + small.length === cards.length;
 
-          const card = ({ i, ks }, fill) => (
-            <InitiativeCard key={i.key} i={i} ks={ks} fill={fill}
+          const card = ({ i, ks, ksMonth }, fill) => (
+            <InitiativeCard key={i.key} i={i} ks={ks} ksMonth={ksMonth} fill={fill}
               hovered={hoveredCard === i.key}
               onHover={() => setHoveredCard(i.key)}
               onLeave={() => setHoveredCard(null)}
@@ -129,7 +161,16 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               <div style={{ marginBottom: 11 }}>
                 <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
               </div>
-              {splitLayout ? (
+              {cards.length === 1 ? (
+                // A lone card in its section (e.g. MORTH once Green
+                // Contribution is hidden below) keeps its original
+                // single-tile width -- the grid still reserves the second
+                // slot, left blank, rather than stretching the card to fill it.
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 18 }}>
+                  {card(cards[0], false)}
+                  <div />
+                </div>
+              ) : splitLayout ? (
                 <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
                   {card(big[0], "row")}
                   <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
@@ -161,7 +202,13 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // OCEMS itself has no live source yet (a separate, deferred integration).
 const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc"]);
 
-function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+// MRS/Road Repair's "This Month" bar mirrors cumulative on purpose (CAQM's
+// totals don't change with the requested date window -- see Summary.jsx's
+// thisMonth comment) -- flagged here so the tile reads as a documented
+// characteristic, not a stale/broken duplicate.
+const CAQM_MIRRORED_INITIATIVES = new Set(["mrs", "road"]);
+
+function InitiativeCard({ i, ks, ksMonth, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   return (
     <article data-card
       onClick={onOpen}
@@ -198,22 +245,40 @@ function InitiativeCard({ i, ks, fill, hovered, onHover, onLeave, onOpen, onDeta
         <span style={{ fontSize: 14, color: C.blue, fontWeight: 700, marginLeft: 4 }}>›</span>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        {ks.map((k, idx) => (
-          <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>
-                {k.name}{k.live && <LiveBadge />}
+        {ks.map((k, idx) => {
+          const km = (ksMonth && ksMonth[idx]) || k;
+          const mirrored = CAQM_MIRRORED_INITIATIVES.has(i.key);
+          return (
+            <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, flex: 1, textWrap: "pretty", fontWeight: 600 }}>
+                  {k.name}{k.live && <LiveBadge />}
+                </div>
+                <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
               </div>
-              <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
+              <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+                <MetricPeriodBlock label="Cumulative" view={k} />
+                <MetricPeriodBlock label="This Month"
+                  title={mirrored ? "CAQM's totals aren't scoped by date -- mirrors the cumulative figure." : undefined}
+                  view={km} />
+              </div>
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: C.ink, marginTop: 3, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
-              <Bar view={k} height={7} />
-              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{k.pct}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </article>
+  );
+}
+
+function MetricPeriodBlock({ label, view, title }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0 }} title={title}>
+      <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: ".08em", color: C.mute, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 2, fontFamily: "'Source Code Pro', monospace" }}>{view.frac}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+        <Bar view={view} height={6} />
+        <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{view.pct}</span>
+      </div>
+    </div>
   );
 }

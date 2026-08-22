@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { NAV, REGIONS, l1Of, l2Of, l3Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, SingleDatePicker, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
@@ -64,6 +64,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
+  let l3 = l3Of(initiative, region, rf, seg);
   if (initiative.key === "mrs" || initiative.key === "road") {
     // Unconditional -- MRS/Road Repair must never fall back to the static
     // dataset, including while caqmByKey hasn't loaded yet (e.g. a
@@ -86,7 +87,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l1 = applyIcccOverrides(l1, icccByKey);
     l2 = applyIcccOverrides(l2, icccByKey);
   }
-  const detail = [...l1, ...l2].find((m) => m.id === detailId);
+  const detail = [...l1, ...l2, ...l3].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);
 
   return (
@@ -156,7 +157,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
               // so it's hidden entirely rather than just defaulting oddly.
               <Dropdown label={region === "All-Delhi NCR" ? "Delhi NCR" : region} icon={PinIcon} open={menu === "region"}
                 onToggle={() => setMenu(menu === "region" ? null : "region")}
-                options={["Delhi NCR", ...REGIONS, "Comparative"].map((r) => ({
+                options={["Delhi NCR", "Comparative", ...REGIONS].map((r) => ({
                   label: r,
                   selected: r === (region === "All-Delhi NCR" ? "Delhi NCR" : region),
                   select: () => {
@@ -240,6 +241,47 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
             </div>
           )}
         </div>
+
+        {l3.length > 0 && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "end", gap: 18, padding: "12px 42px 7px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: C.ink }}>L3 SLA monitoring</span>
+                <span style={{ fontSize: 12.5, color: C.faint }}>{region === "All-Delhi NCR" ? "All four states combined" : `${region} only`}</span>
+              </div>
+              <span />
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint, textAlign: "right" }}>VALUE</span>
+              <span />
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint }}>COUNT</span>
+              <span />
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint }}>PROGRESS</span>
+              <span />
+            </div>
+
+            <div style={{ padding: "0 26px 64px" }}>
+              <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
+                {l3.map((m) => (
+                  <div key={m.id} data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18,
+                    padding: "9px 15px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>{m.stageLabel}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
+                        {m.name}{m.live && <LiveBadge />}
+                      </div>
+                    </div>
+                    <span />
+                    <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: m.flag }}>{m.pct}</span>
+                    <span />
+                    <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{m.frac}</span>
+                    <span />
+                    <Bar view={m} height={8} />
+                    <div style={{ justifySelf: "end" }}><InfoButton onClick={() => setDetailId(m.id)} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 26px 14px", flexWrap: "wrap",
           rowGap: 4, borderTop: `1px solid ${C.line2}`, background: "#fff", position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 35,

@@ -11,7 +11,10 @@ import { CPCB_STATE_IDS, aggregateApcdMetrics } from "./apcdLive.js";
 // date (YYYY-MM-DD, optional): selects a specific historical snapshot
 // instead of the latest one -- see fetchApcdSummary/moefcc.py. Omit for
 // "latest" (Summary page's usage, which has no date selector).
-export function useApcdSummary(active, region, date) {
+// monthStart (YYYY-MM-DD, optional, mutually exclusive with date): returns
+// this month's delta instead -- see fetchApcdSummary. Used by Summary.jsx
+// for the "This Month" bar.
+export function useApcdSummary(active, region, date, monthStart) {
   const [byKey, setByKey] = useState(null);
 
   useEffect(() => {
@@ -22,7 +25,7 @@ export function useApcdSummary(active, region, date) {
     let cancelled = false;
     const stateIds = region === "All-Delhi NCR" ? Object.values(CPCB_STATE_IDS) : [CPCB_STATE_IDS[region]];
 
-    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id, undefined, date)))
+    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id, undefined, date, monthStart)))
       .then((responses) => {
         if (!cancelled) setByKey(aggregateApcdMetrics(responses));
       })
@@ -34,7 +37,7 @@ export function useApcdSummary(active, region, date) {
     return () => {
       cancelled = true;
     };
-  }, [active, region, date]);
+  }, [active, region, date, monthStart]);
 
   return byKey;
 }

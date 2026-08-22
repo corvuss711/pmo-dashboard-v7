@@ -233,7 +233,9 @@ export function DetailDrawer({ detail, onClose, fixed }) {
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "20px 22px 16px", borderBottom: `1px solid ${C.line2}` }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", color: C.faint }}>
-              {detail.id.startsWith("L1") ? "LEVEL 1 METRIC" : `${detail.stageLabel.toUpperCase()} · L2 METRIC`}
+              {detail.id.startsWith("L1")
+                ? "LEVEL 1 METRIC"
+                : `${detail.stageLabel.toUpperCase()} · ${detail.id.startsWith("L3") ? "L3" : "L2"} METRIC`}
             </div>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.blue, marginTop: 5, lineHeight: 1.3, textWrap: "pretty" }}>{detail.name}</div>
           </div>
@@ -261,7 +263,7 @@ export function DetailDrawer({ detail, onClose, fixed }) {
           <div style={{ height: 1, background: C.line2, margin: "16px 0" }} />
           <div>
             <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".06em", color: C.ink }}>WHERE IT SITS IN THE PROCESS</div>
-            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", rowGap: 8, marginTop: 10 }}>
               {(detail.context || []).map((label, i, a) => (
                 <div key={label} style={{ display: "flex", alignItems: "center" }}>
                   <span style={{ padding: "8px 12px", borderRadius: 5, fontSize: 12.5, lineHeight: 1.3,
