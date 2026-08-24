@@ -28,3 +28,22 @@ export async function fetchApcdSummary(stateId, cityId, date, monthStart) {
   }
   return data; // { stateId, cityId, snapshotDate, metrics: [...] }
 }
+
+// Same as fetchApcdSummary but for several states in ONE request --
+// collapses N round trips into 1. stateIds: array of numbers.
+export async function fetchApcdSummaryMulti(stateIds, cityId, date, monthStart) {
+  const qs = new URLSearchParams({
+    stateIds: stateIds.join(","),
+    ...(cityId != null ? { cityId } : {}),
+    ...(date ? { date } : {}),
+    ...(monthStart ? { monthStart } : {}),
+  });
+  const res = await fetch(apiUrl(`/metrics/apcd-summary-multi?${qs}`));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data?.message || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
+  return data.results || []; // [{ stateId, cityId, metrics: [...] }, ...]
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMrsRrSummary } from "./caqmApi.js";
+import { fetchMrsRrSummaryMulti } from "./caqmApi.js";
 import { CAQM_STATE_IDS, aggregateCaqmMetrics } from "./caqmLive.js";
 
 // region: "All-Delhi NCR" (queries all 4 states and sums) | a specific state
@@ -24,7 +24,7 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
     setLoading(true);
     const stateIds = region === "All-Delhi NCR" ? Object.values(CAQM_STATE_IDS) : [CAQM_STATE_IDS[region]];
 
-    Promise.all(stateIds.map((id) => fetchMrsRrSummary(id, fromDate, toDate)))
+    fetchMrsRrSummaryMulti(stateIds, fromDate, toDate)
       .then((responses) => {
         if (!cancelled) setByKey(aggregateCaqmMetrics(responses));
       })

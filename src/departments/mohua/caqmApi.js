@@ -15,3 +15,18 @@ export async function fetchMrsRrSummary(stateId, fromDate, toDate) {
   }
   return data; // { stateId, fromDate, toDate, metrics: [...] }
 }
+
+// Same as fetchMrsRrSummary but for several states in ONE request --
+// collapses N round trips into 1 (see server/index.js's mrs-rr-summary-multi
+// route). stateIds: array of numbers.
+export async function fetchMrsRrSummaryMulti(stateIds, fromDate, toDate) {
+  const qs = new URLSearchParams({ stateIds: stateIds.join(","), ...(fromDate ? { fromDate, toDate } : {}) });
+  const res = await fetch(apiUrl(`/metrics/mrs-rr-summary-multi?${qs}`));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data?.message || "Request failed");
+    err.status = res.status;
+    throw err;
+  }
+  return data.results || []; // [{ stateId, cityId, metrics: [...] }, ...]
+}

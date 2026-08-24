@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchApcdSummary } from "./apcdApi.js";
+import { fetchApcdSummaryMulti } from "./apcdApi.js";
 import { CPCB_STATE_IDS, aggregateApcdMetrics } from "./apcdLive.js";
 
 // region: "All-Delhi NCR" (queries all 4 known states and sums) | a specific
@@ -27,10 +27,15 @@ export function useApcdSummary(active, region, date, monthStart) {
       return;
     }
     let cancelled = false;
+    const stateIds = (region === "All-Delhi NCR" ? Object.values(CPCB_STATE_IDS) : [CPCB_STATE_IDS[region]]).filter(Boolean);
+    if (stateIds.length === 0) {
+      setByKey(aggregateApcdMetrics([]));
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const stateIds = region === "All-Delhi NCR" ? Object.values(CPCB_STATE_IDS) : [CPCB_STATE_IDS[region]];
 
-    Promise.all(stateIds.filter(Boolean).map((id) => fetchApcdSummary(id, undefined, date, monthStart)))
+    fetchApcdSummaryMulti(stateIds, undefined, date, monthStart)
       .then((responses) => {
         if (!cancelled) setByKey(aggregateApcdMetrics(responses));
       })

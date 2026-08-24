@@ -133,6 +133,34 @@ metrics.get("/mrs-rr-summary", async (req, res) => {
   }
 });
 
+// Batched variant -- 1 request for several states instead of 4 (see
+// app/departments/mohua.py's mrs_rr_summary_multi docstring).
+metrics.get("/mrs-rr-summary-multi", async (req, res) => {
+  const { stateIds, cityId, fromDate, toDate } = req.query;
+  if (!stateIds) {
+    return res.status(400).json({ message: "stateIds is required" });
+  }
+  if (Boolean(fromDate) !== Boolean(toDate)) {
+    return res.status(400).json({ message: "fromDate and toDate must be provided together, or both omitted" });
+  }
+  try {
+    const qs = new URLSearchParams({
+      stateIds,
+      ...(cityId != null ? { cityId } : {}),
+      ...(fromDate ? { fromDate, toDate } : {}),
+    });
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary-multi?${qs}`);
+    const data = await upstreamRes.json().catch(() => ({}));
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).json({ message: data?.detail || "MRS/RR metrics request failed" });
+    }
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("CAQM mrs-rr-summary-multi proxy error:", err);
+    return res.status(502).json({ message: "Unable to reach metrics service" });
+  }
+});
+
 // APCD (MoEFCC/CPCB): no session/cookie involved here either -- the APCD
 // portal's client_id/secret auth happens only inside the daily cron on the
 // Python backend, never in this browser-facing proxy.
@@ -156,6 +184,31 @@ metrics.get("/apcd-summary", async (req, res) => {
     return res.status(200).json(data);
   } catch (err) {
     console.error("APCD apcd-summary proxy error:", err);
+    return res.status(502).json({ message: "Unable to reach metrics service" });
+  }
+});
+
+// Batched variant -- 1 request for several states instead of 4.
+metrics.get("/apcd-summary-multi", async (req, res) => {
+  const { stateIds, cityId, date, monthStart } = req.query;
+  if (!stateIds) {
+    return res.status(400).json({ message: "stateIds is required" });
+  }
+  try {
+    const qs = new URLSearchParams({
+      stateIds,
+      ...(cityId != null ? { cityId } : {}),
+      ...(date ? { date } : {}),
+      ...(monthStart ? { monthStart } : {}),
+    });
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary-multi?${qs}`);
+    const data = await upstreamRes.json().catch(() => ({}));
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).json({ message: data?.detail || "APCD metrics request failed" });
+    }
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("APCD apcd-summary-multi proxy error:", err);
     return res.status(502).json({ message: "Unable to reach metrics service" });
   }
 });
