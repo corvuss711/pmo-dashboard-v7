@@ -144,6 +144,11 @@ export const INITIATIVES = [
         rationale: "Detect pendency for payment approvals by NCRPB.", agency: "NCRPB", source: "Not yet identified",
         numL: "OTC payments pending > SLA", denL: "approved OTC claims",
         context: ["MoRTH approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 },
+      { stage: 7, stageLabel: "OEM discount", name: "% OEM discount application pending (minimum 8%)", num: 0, den: 0,
+        formula: "No. of new vehicle purchases with minimum 8% OEM discount not applied ÷ No. of new BS VI vehicle purchase applications",
+        rationale: "Detect pendency for OEM discount application on new vehicle purchase.", agency: "OEM", source: "Not yet identified",
+        numL: "discount not applied", denL: "new BS VI purchase applications",
+        context: ["New BS VI vehicle purchase", "OEM discount application pending", "Minimum 8% discount applied"], active: 1 },
       { stage: 6, stageLabel: "Fuel voucher", name: "% Fuel voucher validations pending by OMCs/CGD (>SLA)", num: 0, den: 0,
         formula: "No. of fuel voucher claims pending validation by OMC/CGD > SLA ÷ No. of fuel voucher claims",
         rationale: "Detect OMC/MoRTH validation delays for fuel vouchers.", agency: "OMCs, MoRTH", source: "Not yet identified",
@@ -158,12 +163,7 @@ export const INITIATIVES = [
         formula: "No. of fuel voucher payments pending by NCRPB > SLA ÷ No. of approved fuel voucher claims",
         rationale: "Track NCRPB payment backlog for fuel vouchers.", agency: "NCRPB", source: "Not yet identified",
         numL: "payments pending > SLA", denL: "approved claims",
-        context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 },
-      { stage: 7, stageLabel: "OEM discount", name: "% OEM discount application pending (minimum 8%)", num: 0, den: 0,
-        formula: "No. of new vehicle purchases with minimum 8% OEM discount not applied ÷ No. of new BS VI vehicle purchase applications",
-        rationale: "Detect pendency for OEM discount application on new vehicle purchase.", agency: "OEM", source: "Not yet identified",
-        numL: "discount not applied", denL: "new BS VI purchase applications",
-        context: ["New BS VI vehicle purchase", "OEM discount application pending", "Minimum 8% discount applied"], active: 1 }
+        context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 }
     ] },
 
   { key: "green-contribution", name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",
