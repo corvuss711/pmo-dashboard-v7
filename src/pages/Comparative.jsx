@@ -120,8 +120,10 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             }))} />
         )}
 
+        {/* Date filter hidden 2026-08-24 per request, everywhere in the app --
+            range state is left intact so this is a one-line restore later.
         <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
-          onToggle={() => setMenu(menu === "range" ? null : "range")} />
+          onToggle={() => setMenu(menu === "range" ? null : "range")} /> */}
       </div>
 
       {/* State Cards Grid */}

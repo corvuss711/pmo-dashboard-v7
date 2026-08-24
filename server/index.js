@@ -108,12 +108,19 @@ const PY_BACKEND_URL = process.env.PY_BACKEND_URL || "http://74.225.180.0:8011";
 const metrics = express.Router();
 
 metrics.get("/mrs-rr-summary", async (req, res) => {
-  const { stateId, fromDate, toDate } = req.query;
-  if (!stateId || !fromDate || !toDate) {
-    return res.status(400).json({ message: "stateId, fromDate and toDate are required" });
+  const { stateId, cityId, fromDate, toDate } = req.query;
+  if (!stateId) {
+    return res.status(400).json({ message: "stateId is required" });
+  }
+  if (Boolean(fromDate) !== Boolean(toDate)) {
+    return res.status(400).json({ message: "fromDate and toDate must be provided together, or both omitted" });
   }
   try {
-    const qs = new URLSearchParams({ stateId, fromDate, toDate });
+    const qs = new URLSearchParams({
+      stateId,
+      ...(cityId != null ? { cityId } : {}),
+      ...(fromDate ? { fromDate, toDate } : {}),
+    });
     const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary?${qs}`);
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {

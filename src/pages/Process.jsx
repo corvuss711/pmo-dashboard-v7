@@ -38,8 +38,8 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // Live CAQM data for MRS/Road Repair. MRS's L1/L2 items are untagged and get
   // rescaled by road-width segment (segApply) -- CAQM's response isn't
   // width-segmented, so only apply live data on the default "all widths" segment.
-  const caqmLiveActive = initiative.key === "road" || (initiative.key === "mrs" && (!seg || seg === initiative.splits[0].key));
-  const caqmByKey = useMrsRrSummary(caqmLiveActive, region, range);
+  const caqmLiveActive = initiative.key === "road" || initiative.key === "scc" || (initiative.key === "mrs" && (!seg || seg === initiative.splits[0].key));
+  const caqmByKey = useMrsRrSummary(caqmLiveActive, region, range.from, range.to);
 
   // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
   // source -- fetch regardless of which segment is selected (applyApcdOverrides
@@ -72,6 +72,11 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     // applyCaqmOverrides forces an honest 0/0 there.
     l1 = applyCaqmOverrides(l1, initiative.key, "L1", caqmByKey);
     l2 = applyCaqmOverrides(l2, initiative.key, "L2", caqmByKey);
+  }
+  if (initiative.key === "scc") {
+    // Only L1 ("% SCCs operationalized") has a matching CAQM field
+    // (sccs_operationalized) -- L2's 4 stages stay static.
+    l1 = applyCaqmOverrides(l1, "scc", "L1", caqmByKey);
   }
   if (initiative.key === "cems") {
     // Same unconditional rule -- the "apcd" segment must never fall back to
@@ -166,16 +171,18 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                   }
                 }))} />
             )}
+            {/* Date filter hidden 2026-08-24 per request, everywhere in the
+                app -- both branches (APCD's single-date lookup and the
+                generic range picker). apcdDate/range state and their
+                downstream use (rf, live fetches) are left intact so this is
+                a one-line restore later.
             {initiative.key === "cems" && curSeg?.key === "apcd" ? (
-              // APCD only: a real single-date lookup, not a range -- CPCB's
-              // cronDate genuinely changes the data (confirmed live), unlike
-              // CAQM's range which is cosmetic for every other initiative.
               <SingleDatePicker date={apcdDate} setDate={setApcdDate} open={menu === "range"}
                 onToggle={() => setMenu(menu === "range" ? null : "range")} />
             ) : (
               <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
                 onToggle={() => setMenu(menu === "range" ? null : "range")} />
-            )}
+            )} */}
           </div>
 
           <div style={{ display: "flex", gap: 10, padding: "0 26px 12px", overflowX: "auto" }}>

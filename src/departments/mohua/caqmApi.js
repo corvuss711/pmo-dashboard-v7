@@ -1,9 +1,11 @@
 import { apiUrl } from "../../lib/api.js";
 
-// fromDate/toDate: "YYYY-MM-DD". No credentials needed -- CAQM's upstream
+// fromDate/toDate ("YYYY-MM-DD", optional, required together): genuinely
+// scopes the result (confirmed 2026-08-24). Omit both for the cron's
+// standard "since launch" window. No credentials needed -- CAQM's upstream
 // requires no auth, so this is a plain passthrough through Node.
 export async function fetchMrsRrSummary(stateId, fromDate, toDate) {
-  const qs = new URLSearchParams({ stateId, fromDate, toDate });
+  const qs = new URLSearchParams({ stateId, ...(fromDate ? { fromDate, toDate } : {}) });
   const res = await fetch(apiUrl(`/metrics/mrs-rr-summary?${qs}`));
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

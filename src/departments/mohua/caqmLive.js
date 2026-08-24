@@ -5,15 +5,18 @@ import { withLiveValue, withZeroValue } from "../../lib/liveOverrides.js";
 export const CAQM_STATE_IDS = { Delhi: 6, UP: 32, Rajasthan: 28, Haryana: 13 };
 
 // Which static metric (by initiative key + L1/L2 + exact label) each CAQM
-// key can feed when real data is available. Only the 4 currently-"computed"
-// CAQM metrics are listed -- the other 8 (and any metric with no rule at
-// all) render as an explicit 0/0, never the old static mock number: MRS and
+// key can feed when real data is available. Any metric with no rule here
+// renders as an explicit 0/0, never the old static mock number: MRS and
 // Road Repair must never show fabricated demo data, on any segment/region.
 export const CAQM_MRS_RR_OVERRIDES = [
+  { initiative: "mrs", level: "L1", name: "% MRS deployed", caqmKey: "mrs_deployed" },
+  { initiative: "mrs", level: "L2", name: "% MRS in tender", caqmKey: "mrs_in_tender" },
   { initiative: "mrs", level: "L2", name: "% MRS with work order awarded", caqmKey: "mrs_work_order_awarded" },
   { initiative: "mrs", level: "L2", name: "% MRS procurement completed (MRS delivered)", caqmKey: "mrs_procurement_completed" },
+  { initiative: "road", level: "L1", name: "% roads with redevelopment completed", caqmKey: "rr_redevelopment_l1" },
   { initiative: "road", level: "L2", name: "% roads with work order awarded", caqmKey: "rr_work_order_awarded" },
   { initiative: "road", level: "L2", name: "% roads with redevelopment completed", caqmKey: "rr_redevelopment_l2" },
+  { initiative: "scc", level: "L1", name: "% SCCs operationalized", caqmKey: "sccs_operationalized" },
 ];
 
 // Sums numerator/denominator across one or more per-state CAQM responses

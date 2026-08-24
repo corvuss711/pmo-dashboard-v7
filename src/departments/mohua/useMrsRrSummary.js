@@ -3,11 +3,12 @@ import { fetchMrsRrSummary } from "./caqmApi.js";
 import { CAQM_STATE_IDS, aggregateCaqmMetrics } from "./caqmLive.js";
 
 // region: "All-Delhi NCR" (queries all 4 states and sums) | a specific state
-// name from REGIONS (queries just that one). No login/session involved --
-// CAQM needs no auth. Returns a
-// { [caqmKey]: { value, numerator, denominator, status } } map, or null
-// while inactive/loading/failed.
-export function useMrsRrSummary(active, region, range) {
+// name from REGIONS (queries just that one). fromDate/toDate (optional,
+// required together): genuinely scopes the result -- omit both for the
+// cron's standard "since launch" window (Summary's "Cumulative" column).
+// Returns a { [caqmKey]: { value, numerator, denominator, status } } map,
+// or null while inactive/loading/failed.
+export function useMrsRrSummary(active, region, fromDate, toDate) {
   const [byKey, setByKey] = useState(null);
 
   useEffect(() => {
@@ -18,11 +19,8 @@ export function useMrsRrSummary(active, region, range) {
     let cancelled = false;
     const stateIds = region === "All-Delhi NCR" ? Object.values(CAQM_STATE_IDS) : [CAQM_STATE_IDS[region]];
 
-    console.log("[CAQM] mrs-rr-summary request stateIds:", stateIds, "range:", range);
-
-    Promise.all(stateIds.map((id) => fetchMrsRrSummary(id, range.from, range.to)))
+    Promise.all(stateIds.map((id) => fetchMrsRrSummary(id, fromDate, toDate)))
       .then((responses) => {
-        console.log("[CAQM] mrs-rr-summary responses:", responses);
         if (!cancelled) setByKey(aggregateCaqmMetrics(responses));
       })
       .catch((err) => {
@@ -33,7 +31,7 @@ export function useMrsRrSummary(active, region, range) {
     return () => {
       cancelled = true;
     };
-  }, [active, region, range.from, range.to]);
+  }, [active, region, fromDate, toDate]);
 
   return byKey;
 }
