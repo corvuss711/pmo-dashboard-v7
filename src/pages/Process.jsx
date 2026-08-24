@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, l3Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { NAV, REGIONS, l1Of, l2Of, l3Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, SingleDatePicker, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
@@ -63,14 +63,28 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
 
+  // "Cumulative" column (renamed from "This Month", same fixed 1st-of-month
+  // through today window as Summary.jsx) -- region/segment-aware, unlike
+  // Summary which is always NCR-wide.
+  const thisMonth = defaultRange();
+  const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(caqmLiveActive, region, thisMonth.from, thisMonth.to);
+  const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(apcdLiveActive, region, undefined, thisMonth.from);
+  const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(icccLiveActive, thisMonth.from, thisMonth.to);
+
   // Only one live source is ever active per initiative view -- collapse to
   // a single flag so L1/L2/L3 sections can show one "fetching live data"
-  // note instead of a stale-looking 0/0 while the request is in flight.
-  const liveLoading = caqmLiveActive ? caqmLoading : apcdLiveActive ? apcdLoading : icccLiveActive ? icccLoading : false;
+  // note instead of a stale-looking 0/0 while a request is in flight.
+  const liveLoading = caqmLiveActive ? (caqmLoading || caqmMonthLoading)
+    : apcdLiveActive ? (apcdLoading || apcdMonthLoading)
+    : icccLiveActive ? (icccLoading || icccMonthLoading)
+    : false;
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
   let l3 = l3Of(initiative, region, rf, seg);
+  // "Cumulative" variant. Defaults to mirroring l1/l2 (static defs stay an
+  // honest 0/0 either way; L3 has no live source anywhere yet).
+  let l1Month = l1, l2Month = l2;
   if (initiative.key === "mrs" || initiative.key === "road") {
     // Unconditional -- MRS/Road Repair must never fall back to the static
     // dataset, including while caqmByKey hasn't loaded yet (e.g. a
@@ -78,11 +92,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     // applyCaqmOverrides forces an honest 0/0 there.
     l1 = applyCaqmOverrides(l1, initiative.key, "L1", caqmByKey);
     l2 = applyCaqmOverrides(l2, initiative.key, "L2", caqmByKey);
+    l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), initiative.key, "L1", caqmMonthByKey);
+    l2Month = applyCaqmOverrides(l2Of(initiative, region, rf, seg), initiative.key, "L2", caqmMonthByKey);
   }
   if (initiative.key === "scc") {
     // Only L1 ("% SCCs operationalized") has a matching CAQM field
     // (sccs_operationalized) -- L2's 4 stages stay static.
     l1 = applyCaqmOverrides(l1, "scc", "L1", caqmByKey);
+    l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), "scc", "L1", caqmMonthByKey);
   }
   if (initiative.key === "cems") {
     // Same unconditional rule -- the "apcd" segment must never fall back to
@@ -90,6 +107,8 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     // untouched (no live source yet).
     l1 = applyApcdOverrides(l1, apcdByKey);
     l2 = applyApcdOverrides(l2, apcdByKey);
+    l1Month = applyApcdOverrides(l1Of(initiative, region, rf, seg), apcdMonthByKey);
+    l2Month = applyApcdOverrides(l2Of(initiative, region, rf, seg), apcdMonthByKey);
   }
   if (initiative.key === "iccc") {
     // Unconditional too -- the 3 computable ICCC metrics never fall back to
@@ -97,6 +116,8 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     // regardless of region/fetch state (see applyIcccOverrides).
     l1 = applyIcccOverrides(l1, icccByKey);
     l2 = applyIcccOverrides(l2, icccByKey);
+    l1Month = applyIcccOverrides(l1Of(initiative, region, rf, seg), icccMonthByKey);
+    l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
   const detail = [...l1, ...l2, ...l3].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);
@@ -199,22 +220,22 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           )}
 
           <div style={{ display: "flex", gap: 10, padding: "0 26px 12px", overflowX: "auto" }}>
-            {l1.map((k) => (
-              <div key={k.id} style={{ flex: 1, minWidth: 270, border: `1px solid ${C.line}`, borderRadius: 6, padding: "11px 14px", background: "#FAFAF8" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint, paddingTop: 2 }}>L1</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.ink, lineHeight: 1.3, flex: 1, textWrap: "pretty" }}>
-                    {k.name}{k.live && <LiveBadge />}
-                  </span>
-                  <InfoButton onClick={() => setDetailId(k.id)} />
+            {l1.map((k, idx) => {
+              const km = l1Month[idx] || k;
+              return (
+                <div key={k.id} style={{ flex: 1, minWidth: 270, border: `1px solid ${C.line}`, borderRadius: 6, padding: "11px 14px", background: "#FAFAF8" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".09em", color: C.faint, paddingTop: 2 }}>L1</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.ink, lineHeight: 1.3, flex: 1, textWrap: "pretty" }}>
+                      {k.name}{k.live && <LiveBadge />}
+                    </span>
+                    <InfoButton onClick={() => setDetailId(k.id)} />
+                  </div>
+                  <PeriodRow label="Aggregate" view={k} />
+                  <PeriodRow label="Cumulative" view={km} />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 9 }}>
-                  <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: k.flag }}>{k.pct}</span>
-                  <Bar view={k} height={8} />
-                  <span style={{ fontSize: 12, fontFamily: "'Source Code Pro', monospace", color: C.mute, whiteSpace: "nowrap" }}>{k.frac}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -235,24 +256,15 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
         <div style={{ padding: "0 26px 64px" }}>
           {l2.length ? (
             <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
-              {l2.map((m) => (
-                <div key={m.id} data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18,
-                  padding: "9px 15px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>{m.stageLabel}</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
-                      {m.name}{m.live && <LiveBadge />}
-                    </div>
+              {l2.map((m, idx) => {
+                const mm = l2Month[idx] || m;
+                return (
+                  <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
+                    <GridRow m={m} view={m} label="Aggregate" onDetail={() => setDetailId(m.id)} />
+                    <GridRow m={m} view={mm} label="Cumulative" />
                   </div>
-                  <span />
-                  <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: m.flag }}>{m.pct}</span>
-                  <span />
-                  <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{m.frac}</span>
-                  <span />
-                  <Bar view={m} height={8} />
-                  <div style={{ justifySelf: "end" }}><InfoButton onClick={() => setDetailId(m.id)} /></div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div style={{ border: "1px dashed #C8C8C0", borderRadius: 6, padding: 26, textAlign: "center", background: "#FAFAF8" }}>
@@ -281,21 +293,9 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
             <div style={{ padding: "0 26px 64px" }}>
               <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
                 {l3.map((m) => (
-                  <div key={m.id} data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18,
-                    padding: "9px 15px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>{m.stageLabel}</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
-                        {m.name}{m.live && <LiveBadge />}
-                      </div>
-                    </div>
-                    <span />
-                    <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: m.flag }}>{m.pct}</span>
-                    <span />
-                    <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{m.frac}</span>
-                    <span />
-                    <Bar view={m} height={8} />
-                    <div style={{ justifySelf: "end" }}><InfoButton onClick={() => setDetailId(m.id)} /></div>
+                  <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
+                    <GridRow m={m} view={m} label="Aggregate" onDetail={() => setDetailId(m.id)} />
+                    <GridRow m={m} view={m} label="Cumulative" />
                   </div>
                 ))}
               </div>
@@ -318,6 +318,52 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
       </div>
 
       {detail && <DetailDrawer detail={detail} onClose={() => setDetailId(null)} fixed />}
+    </div>
+  );
+}
+
+// L1 card's per-period line (Aggregate / Cumulative).
+function PeriodRow({ label, view }) {
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 3 }}>
+        <span style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: view.flag }}>{view.pct}</span>
+        <Bar view={view} height={7} />
+        <span style={{ fontSize: 11.5, fontFamily: "'Source Code Pro', monospace", color: C.mute, whiteSpace: "nowrap" }}>{view.frac}</span>
+      </div>
+    </div>
+  );
+}
+
+// L2/L3 grid row's per-period line. `m` carries name/stageLabel/live (shown
+// only on the "Aggregate" row); `view` carries the period-specific
+// pct/frac/flag/live. onDetail present only on the primary row.
+function GridRow({ m, view, label, onDetail }) {
+  return (
+    <div data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18, padding: onDetail ? "9px 15px 3px" : "3px 15px 9px" }}>
+      <div style={{ minWidth: 0 }}>
+        {onDetail ? (
+          <>
+            <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>
+              <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase" }}>{label}</span>
+              {m.stageLabel ? ` · ${m.stageLabel}` : ""}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
+              {m.name}{view.live && <LiveBadge />}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+        )}
+      </div>
+      <span />
+      <span style={{ fontSize: onDetail ? 19 : 15, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: view.flag }}>{view.pct}</span>
+      <span />
+      <span style={{ fontSize: onDetail ? 12.5 : 11, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{view.frac}</span>
+      <span />
+      <Bar view={view} height={onDetail ? 8 : 6} />
+      <div style={{ justifySelf: "end" }}>{onDetail && <InfoButton onClick={onDetail} />}</div>
     </div>
   );
 }

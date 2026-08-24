@@ -71,7 +71,13 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             }}>
               {NAV.filter((n) => n.key !== "summary").map((n) => (
                 <button key={n.key} type="button"
-                  onClick={() => { setMenu(null); setSeg(null); onNavigate(n.key, "comparative"); }}
+                  onClick={() => {
+                    setMenu(null); setSeg(null);
+                    // ICCC has no per-state breakdown at all -- Comparative's
+                    // 4-state grid doesn't apply to it, same reason Process.jsx
+                    // hides ICCC's region picker. Land on Process instead.
+                    onNavigate(n.key, n.key === "iccc" ? "All-Delhi NCR" : "comparative");
+                  }}
                   style={{
                     display: "block", width: "100%", textAlign: "left", padding: "11px 15px", border: 0,
                     fontFamily: "inherit", fontSize: 13.5, cursor: "pointer", color: C.ink,

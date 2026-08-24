@@ -66,7 +66,8 @@ export const INITIATIVES = [
       { n: 3, label: "Loan", hint: "Loan application, approval and disbursal" },
       { n: 4, label: "Interest subvention", hint: "Monthly interest subvention claims and payments" },
       { n: 5, label: "One-time claim", hint: "One-time claim approved by MoRTH and paid by NCRPB" },
-      { n: 6, label: "Fuel voucher", hint: "Fuel voucher claims approved by MoPNG and paid by NCRPB" }
+      { n: 6, label: "Fuel voucher", hint: "Fuel voucher claims approved by MoPNG and paid by NCRPB" },
+      { n: 7, label: "OEM discount", hint: "OEM discount application status on new BS VI vehicle purchases" }
     ],
     metrics: [
       { stage: 1, stageLabel: "Registration", name: "% registered on portal", num: 0, den: 0,
@@ -157,7 +158,12 @@ export const INITIATIVES = [
         formula: "No. of fuel voucher payments pending by NCRPB > SLA ÷ No. of approved fuel voucher claims",
         rationale: "Track NCRPB payment backlog for fuel vouchers.", agency: "NCRPB", source: "Not yet identified",
         numL: "payments pending > SLA", denL: "approved claims",
-        context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 }
+        context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 },
+      { stage: 7, stageLabel: "OEM discount", name: "% OEM discount application pending (minimum 8%)", num: 0, den: 0,
+        formula: "No. of new vehicle purchases with minimum 8% OEM discount not applied ÷ No. of new BS VI vehicle purchase applications",
+        rationale: "Detect pendency for OEM discount application on new vehicle purchase.", agency: "OEM", source: "Not yet identified",
+        numL: "discount not applied", denL: "new BS VI purchase applications",
+        context: ["New BS VI vehicle purchase", "OEM discount application pending", "Minimum 8% discount applied"], active: 1 }
     ] },
 
   { key: "green-contribution", name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",

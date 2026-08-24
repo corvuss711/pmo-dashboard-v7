@@ -280,9 +280,9 @@ function MetricRow({ k, km, onDetail, cumulativeLoading, monthLoading }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-        <MetricPeriodBlock label="Cumulative" view={k} loading={cumulativeLoading} />
+        <MetricPeriodBlock label="Aggregate" view={k} loading={cumulativeLoading} />
         <div style={{ width: 2, alignSelf: "stretch", background: C.line }} />
-        <MetricPeriodBlock label="This Month" view={km} loading={monthLoading} />
+        <MetricPeriodBlock label="Cumulative" view={km} loading={monthLoading} />
       </div>
     </>
   );

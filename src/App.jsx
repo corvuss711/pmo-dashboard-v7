@@ -59,6 +59,13 @@ export default function App() {
 
   const initiative = INITIATIVES.find((i) => i.key === route.screen);
   if (!initiative) return <Summary onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
-  if (route.level === "comparative") return <Comparative initiative={initiative} onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
-  return <Process initiative={initiative} region={route.level} onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
+  // ICCC has no per-state breakdown -- Comparative's 4-state grid never
+  // applies to it, regardless of how this route was reached (bookmark,
+  // back button, a stale link), same reasoning as Process.jsx hiding
+  // ICCC's region picker.
+  if (route.level === "comparative" && initiative.key !== "iccc") {
+    return <Comparative initiative={initiative} onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
+  }
+  const region = initiative.key === "iccc" && route.level === "comparative" ? "All-Delhi NCR" : route.level;
+  return <Process initiative={initiative} region={region} onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
 }
