@@ -24,18 +24,18 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // Live APCD data for the "CEMS and APCD for industries" card (NCR-wide
   // aggregate, same as this page's other cards). Always active -- this
   // page has no region/segment selector to gate on.
-  const apcdByKey = useApcdSummary(true, "All-Delhi NCR");
+  const { byKey: apcdByKey, loading: apcdLoading } = useApcdSummary(true, "All-Delhi NCR");
 
   // Live CAQM data for MRS/Road Repair (cumulative -- no args, backend's
   // "since launch" standard window). Always active here (unlike Process.jsx,
   // which gates on the road-width segment) -- this page's L1 cards use
   // l1Of's raw=true path (ini.l1 unfiltered by segApply), matching CAQM's
   // "all widths combined" response.
-  const caqmByKey = useMrsRrSummary(true, "All-Delhi NCR");
+  const { byKey: caqmByKey, loading: caqmLoading } = useMrsRrSummary(true, "All-Delhi NCR");
 
   // Live ICCC data. Always active -- this page only ever shows the
   // NCR-wide combined view, which is the only view ICCC's upstream has.
-  const icccByKey = useIcccSummary(true);
+  const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(true);
 
   // "This Month" bars: a fixed 1st-of-current-month through today window,
   // independent of the page's own (hidden) DateRange state. APCD's
@@ -43,9 +43,9 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
   // DELTA (see moefcc.py's get_delta_since). CAQM and ICCC both now take a
   // genuine fromDate/toDate range.
   const thisMonth = defaultRange();
-  const apcdMonthByKey = useApcdSummary(true, "All-Delhi NCR", undefined, thisMonth.from);
-  const icccMonthByKey = useIcccSummary(true, thisMonth.from, thisMonth.to);
-  const caqmMonthByKey = useMrsRrSummary(true, "All-Delhi NCR", thisMonth.from, thisMonth.to);
+  const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(true, "All-Delhi NCR", undefined, thisMonth.from);
+  const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(true, thisMonth.from, thisMonth.to);
+  const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(true, "All-Delhi NCR", thisMonth.from, thisMonth.to);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -130,7 +130,13 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               if (i.key === "iccc") {
                 ksMonth = applyIcccOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
               }
-              return { i, ks, ksMonth };
+
+              let cumulativeLoading = false, monthLoading = false;
+              if (i.key === "cems") { cumulativeLoading = apcdLoading; monthLoading = apcdMonthLoading; }
+              if (i.key === "mrs" || i.key === "road" || i.key === "scc") { cumulativeLoading = caqmLoading; monthLoading = caqmMonthLoading; }
+              if (i.key === "iccc") { cumulativeLoading = icccLoading; monthLoading = icccMonthLoading; }
+
+              return { i, ks, ksMonth, cumulativeLoading, monthLoading };
             });
           const big = cards.filter((c) => c.ks.length > 1);
           const small = cards.filter((c) => c.ks.length === 1);
@@ -139,8 +145,9 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           // With more cards than that (e.g. 4), a plain grid reads better than a lopsided stack.
           const splitLayout = big.length === 1 && small.length >= 1 && small.length <= 2 && big.length + small.length === cards.length;
 
-          const card = ({ i, ks, ksMonth }, fill) => (
-            <InitiativeCard key={i.key} i={i} ks={ks} ksMonth={ksMonth} fill={fill}
+          const card = ({ i, ks, ksMonth, cumulativeLoading, monthLoading }, fill) => (
+            <InitiativeCard key={i.key} i={i} ks={ks} ksMonth={ksMonth}
+              cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} fill={fill}
               hovered={hoveredCard === i.key}
               onHover={() => setHoveredCard(i.key)}
               onLeave={() => setHoveredCard(null)}
@@ -190,7 +197,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // OCEMS itself has no live source yet (a separate, deferred integration).
 const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc"]);
 
-function InitiativeCard({ i, ks, ksMonth, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   return (
     <article data-card
       onClick={onOpen}
@@ -234,10 +241,12 @@ function InitiativeCard({ i, ks, ksMonth, fill, hovered, onHover, onLeave, onOpe
       {i.key === "parivartan" && ks.length === 2 ? (
         <div style={{ flex: 1, display: "flex" }}>
           <div style={{ flex: "1 1 0", padding: "14px", borderRight: `2px solid ${C.line}` }}>
-            <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail} />
+            <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail}
+              cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
           <div style={{ flex: "1 1 0", padding: "14px" }}>
-            <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail} />
+            <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail}
+              cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
         </div>
       ) : (
@@ -247,7 +256,8 @@ function InitiativeCard({ i, ks, ksMonth, fill, hovered, onHover, onLeave, onOpe
             const km = (ksMonth && ksMonth[idx]) || k;
             return (
               <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-                <MetricRow k={k} km={km} onDetail={onDetail} />
+                <MetricRow k={k} km={km} onDetail={onDetail}
+                  cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
               </div>
             );
           })}
@@ -257,7 +267,7 @@ function InitiativeCard({ i, ks, ksMonth, fill, hovered, onHover, onLeave, onOpe
   );
 }
 
-function MetricRow({ k, km, onDetail }) {
+function MetricRow({ k, km, onDetail, cumulativeLoading, monthLoading }) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "flex-start" }}>
@@ -270,23 +280,32 @@ function MetricRow({ k, km, onDetail }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-        <MetricPeriodBlock label="Cumulative" view={k} />
+        <MetricPeriodBlock label="Cumulative" view={k} loading={cumulativeLoading} />
         <div style={{ width: 2, alignSelf: "stretch", background: C.line }} />
-        <MetricPeriodBlock label="This Month" view={km} />
+        <MetricPeriodBlock label="This Month" view={km} loading={monthLoading} />
       </div>
     </>
   );
 }
 
-function MetricPeriodBlock({ label, view, title }) {
+function MetricPeriodBlock({ label, view, title, loading }) {
   return (
     <div style={{ flex: 1, minWidth: 0 }} title={title}>
       <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: ".08em", color: C.mute, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 2, fontFamily: "'Source Code Pro', monospace" }}>{view.frac}</div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-        <Bar view={view} height={6} />
-        <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{view.pct}</span>
-      </div>
+      {loading ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 6, color: C.faint }}>
+          <SpinnerIcon />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Loading…</span>
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 2, fontFamily: "'Source Code Pro', monospace" }}>{view.frac}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+            <Bar view={view} height={6} />
+            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{view.pct}</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -6,17 +6,22 @@ import { CAQM_STATE_IDS, aggregateCaqmMetrics } from "./caqmLive.js";
 // name from REGIONS (queries just that one). fromDate/toDate (optional,
 // required together): genuinely scopes the result -- omit both for the
 // cron's standard "since launch" window (Summary's "Cumulative" column).
-// Returns a { [caqmKey]: { value, numerator, denominator, status } } map,
-// or null while inactive/loading/failed.
+// Returns { byKey, loading }: byKey is a
+// { [caqmKey]: { value, numerator, denominator, status } } map, or null
+// while inactive/failed; loading is true only while a fetch is genuinely
+// in flight.
 export function useMrsRrSummary(active, region, fromDate, toDate) {
   const [byKey, setByKey] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!active) {
       setByKey(null);
+      setLoading(false);
       return;
     }
     let cancelled = false;
+    setLoading(true);
     const stateIds = region === "All-Delhi NCR" ? Object.values(CAQM_STATE_IDS) : [CAQM_STATE_IDS[region]];
 
     Promise.all(stateIds.map((id) => fetchMrsRrSummary(id, fromDate, toDate)))
@@ -26,6 +31,9 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
       .catch((err) => {
         console.error("[CAQM] mrs-rr-summary fetch failed:", err);
         if (!cancelled) setByKey(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
 
     return () => {
@@ -33,5 +41,5 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
     };
   }, [active, region, fromDate, toDate]);
 
-  return byKey;
+  return { byKey, loading };
 }

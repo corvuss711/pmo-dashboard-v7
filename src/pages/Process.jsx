@@ -43,7 +43,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // the persisted range isn't a window CAQM has necessarily been queried
   // for; omitting both serves the cached "widest window" instead of
   // triggering an on-demand fetch for an arbitrary range.
-  const caqmByKey = useMrsRrSummary(caqmLiveActive, region);
+  const { byKey: caqmByKey, loading: caqmLoading } = useMrsRrSummary(caqmLiveActive, region);
 
   // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
   // source -- fetch regardless of which segment is selected (applyApcdOverrides
@@ -51,20 +51,22 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // dataset untouched either way). Unlike CAQM's range, apcdDate is a real
   // lookup -- CPCB's cronDate genuinely changes the data returned.
   const apcdLiveActive = initiative.key === "cems";
-  const apcdByKey = useApcdSummary(apcdLiveActive, region, apcdDate);
+  const { byKey: apcdByKey, loading: apcdLoading } = useApcdSummary(apcdLiveActive, region, apcdDate);
 
   // Live ICCC data (Delhi dust control portal). No per-state breakdown at
   // all upstream -- only fetch when viewing Delhi/All-Delhi NCR (ICCC isn't
-  // onboarded elsewhere yet), never for another single state or Comparative,
-  // so we don't misleadingly show the same NCR figure under an unrelated
-  // state. Unlike the earlier assumption, ICCC's date range genuinely
-  // scopes the totals (confirmed 2026-08-21) -- range.from/range.to are
-  // sent as an EXACT fromDate/toDate match against a stored window (see
-  // useIcccSummary), not just an "as of" lookup. A range that was never
-  // actually fetched (daily cron only stores ICCC_FROM_DATE-to-today) 404s
-  // and applyIcccOverrides below forces an honest 0/0, same as always.
+  // onboarded elsewhere yet). No fromDate/toDate -- same reasoning as CAQM
+  // above: the date picker is hidden app-wide, so the persisted range isn't
+  // a window ICCC has necessarily been queried for. Omitting both serves
+  // the cron's cached standard window (DB-only) instead of risking an
+  // on-demand live fetch for an arbitrary range on every reload.
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
-  const icccByKey = useIcccSummary(icccLiveActive, range.from, range.to);
+  const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
+
+  // Only one live source is ever active per initiative view -- collapse to
+  // a single flag so L1/L2/L3 sections can show one "fetching live data"
+  // note instead of a stale-looking 0/0 while the request is in flight.
+  const liveLoading = caqmLiveActive ? caqmLoading : apcdLiveActive ? apcdLoading : icccLiveActive ? icccLoading : false;
 
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
@@ -188,6 +190,13 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                 onToggle={() => setMenu(menu === "range" ? null : "range")} />
             )} */}
           </div>
+
+          {liveLoading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 26px 12px", color: C.faint }}>
+              <SpinnerIcon />
+              <span style={{ fontSize: 12.5, fontWeight: 600 }}>Fetching live data…</span>
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: 10, padding: "0 26px 12px", overflowX: "auto" }}>
             {l1.map((k) => (
