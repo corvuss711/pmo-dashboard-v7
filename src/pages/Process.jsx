@@ -39,7 +39,11 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // rescaled by road-width segment (segApply) -- CAQM's response isn't
   // width-segmented, so only apply live data on the default "all widths" segment.
   const caqmLiveActive = initiative.key === "road" || initiative.key === "scc" || (initiative.key === "mrs" && (!seg || seg === initiative.splits[0].key));
-  const caqmByKey = useMrsRrSummary(caqmLiveActive, region, range.from, range.to);
+  // No fromDate/toDate -- the date picker is hidden app-wide right now, so
+  // the persisted range isn't a window CAQM has necessarily been queried
+  // for; omitting both serves the cached "widest window" instead of
+  // triggering an on-demand fetch for an arbitrary range.
+  const caqmByKey = useMrsRrSummary(caqmLiveActive, region);
 
   // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
   // source -- fetch regardless of which segment is selected (applyApcdOverrides
