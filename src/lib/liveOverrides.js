@@ -32,7 +32,11 @@ export function withLiveValue(view, liveNum, liveDen) {
 // number. Unlike withLiveValue, this never returns the original static
 // view: den is forced to 0 unconditionally, so callers don't need to guard
 // against a truthy-but-zero denominator themselves.
-export function withZeroValue(view) {
+// isLive: true when the metric IS wired to a real upstream field but that
+// field's current value is genuinely 0 (e.g. "0 MRS currently in tender" --
+// a real live reading, not a missing source) -- distinguishes that from a
+// metric with no matching field at all, which stays live: false.
+export function withZeroValue(view, isLive = false) {
   return {
     ...view,
     raw: 0,
@@ -45,7 +49,7 @@ export function withZeroValue(view) {
     flag: flag(0),
     track: track(0),
     status: statusWord(0),
-    live: false,
+    live: isLive,
   };
 }
 

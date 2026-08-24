@@ -74,6 +74,6 @@ export function applyCaqmOverrides(items, initiativeKey, level, byKey) {
     if (m && m.status === "computed" && m.denominator > 0) {
       return withLiveValue(k, m.numerator, m.denominator);
     }
-    return withZeroValue(k);
+    return withZeroValue(k, m?.status === "computed");
   });
 }
