@@ -51,6 +51,23 @@ export function aggregateApcdMetrics(perStateResponses) {
   return byKey;
 }
 
+export function byStateApcdMetrics(perStateResponses) {
+  const idToRegion = Object.fromEntries(Object.entries(CPCB_STATE_IDS).map(([region, id]) => [id, region]));
+  const out = {};
+  for (const resp of perStateResponses) {
+    const region = idToRegion[resp.stateId];
+    if (!region) continue;
+    const byKey = {};
+    for (const m of resp.metrics || []) {
+      byKey[m.key] = m.status === "computed"
+        ? { value: m.value, numerator: m.numerator, denominator: m.denominator, status: "computed" }
+        : { value: 0, numerator: 0, denominator: 0, status: "unavailable" };
+    }
+    out[region] = byKey;
+  }
+  return out;
+}
+
 // Applies APCD live data to an l1/l2 view list for the "cems" initiative.
 // Only touches seg === "apcd" entries (matched by exact label); seg ===
 // "ocems" entries pass through unchanged. Every apcd entry resolves to

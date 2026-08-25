@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, PinIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
+import { useMrsRrSummaryByState } from "../departments/mohua/useMrsRrSummary.js";
+import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
+import { useApcdSummaryByState } from "../departments/moefcc/useApcdSummary.js";
+import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,6 +28,12 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === activeSegKey) || initiative.splits[0]);
 
   const rf = rangeFactor(range.from, range.to).factor;
+
+  const caqmActive = initiative.key === "mrs" || initiative.key === "road" || initiative.key === "scc";
+  const { byState: caqmByState, loading: caqmLoading } = useMrsRrSummaryByState(caqmActive);
+  const apcdActive = initiative.key === "cems";
+  const { byState: apcdByState, loading: apcdLoading } = useApcdSummaryByState(apcdActive);
+  const liveLoading = caqmActive ? caqmLoading : apcdActive ? apcdLoading : false;
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -132,11 +142,28 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           onToggle={() => setMenu(menu === "range" ? null : "range")} /> */}
       </div>
 
-      {/* State Cards Grid */}
+      {liveLoading && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 18px 0", color: C.faint }}>
+          <SpinnerIcon />
+          <span style={{ fontSize: 12.5, fontWeight: 600 }}>Fetching live data…</span>
+        </div>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0,1fr))", gap: 14, padding: "18px 18px 44px", alignItems: "start" }}>
         {REGIONS.map((r) => {
-          const ks = l1Of(initiative, r, rf, activeSegKey);
-          const l2s = l2Of(initiative, r, rf, activeSegKey);
+          let ks = l1Of(initiative, r, rf, activeSegKey);
+          let l2s = l2Of(initiative, r, rf, activeSegKey);
+          if (initiative.key === "mrs" || initiative.key === "road") {
+            ks = applyCaqmOverrides(ks, initiative.key, "L1", caqmByState?.[r]);
+            l2s = applyCaqmOverrides(l2s, initiative.key, "L2", caqmByState?.[r]);
+          }
+          if (initiative.key === "scc") {
+            ks = applyCaqmOverrides(ks, "scc", "L1", caqmByState?.[r]);
+          }
+          if (initiative.key === "cems") {
+            ks = applyApcdOverrides(ks, apcdByState?.[r]);
+            l2s = applyApcdOverrides(l2s, apcdByState?.[r]);
+          }
 
           return (
             <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)", overflow: "hidden" }}>

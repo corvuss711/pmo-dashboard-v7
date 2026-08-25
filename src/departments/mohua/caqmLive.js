@@ -55,6 +55,23 @@ export function aggregateCaqmMetrics(perStateResponses) {
   return byKey;
 }
 
+export function byStateCaqmMetrics(perStateResponses) {
+  const idToRegion = Object.fromEntries(Object.entries(CAQM_STATE_IDS).map(([region, id]) => [id, region]));
+  const out = {};
+  for (const resp of perStateResponses) {
+    const region = idToRegion[resp.stateId];
+    if (!region) continue;
+    const byKey = {};
+    for (const m of resp.metrics || []) {
+      byKey[m.key] = m.status === "computed"
+        ? { value: m.value, numerator: m.numerator, denominator: m.denominator, status: "computed" }
+        : { value: 0, numerator: 0, denominator: 0, status: "unavailable" };
+    }
+    out[region] = byKey;
+  }
+  return out;
+}
+
 // Applies CAQM data to an l1/l2 metric-view list for the MRS/Road Repair
 // initiatives, matched by exact label (and level, to disambiguate the two
 // "% roads with redevelopment completed" entries -- L1's denominator

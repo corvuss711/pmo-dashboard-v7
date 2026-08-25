@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchApcdSummaryMulti } from "./apcdApi.js";
-import { CPCB_STATE_IDS, aggregateApcdMetrics } from "./apcdLive.js";
+import { CPCB_STATE_IDS, aggregateApcdMetrics, byStateApcdMetrics } from "./apcdLive.js";
 
 // region: "All-Delhi NCR" (queries all 4 known states and sums) | a specific
 // state name from REGIONS (queries just that one). No login/session
@@ -53,4 +53,37 @@ export function useApcdSummary(active, region, date, monthStart) {
   }, [active, region, date, monthStart]);
 
   return { byKey, loading };
+}
+
+export function useApcdSummaryByState(active) {
+  const [byState, setByState] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setByState(null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+
+    fetchApcdSummaryMulti(Object.values(CPCB_STATE_IDS), undefined, undefined, undefined)
+      .then((responses) => {
+        if (!cancelled) setByState(byStateApcdMetrics(responses));
+      })
+      .catch((err) => {
+        console.error("[APCD] apcd-summary-multi fetch failed:", err);
+        if (!cancelled) setByState(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  return { byState, loading };
 }
