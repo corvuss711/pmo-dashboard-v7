@@ -307,7 +307,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           rowGap: 4, borderTop: `1px solid ${C.line2}`, background: "#fff", position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 35,
           boxShadow: "0 -8px 16px -12px rgba(35,37,39,.45)" }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".1em", color: C.ink }}>STATUS</span>
-          {[["#2E7D32", "On track, 75% and above"], ["#E0A800", "Watch, 50–74%"], ["#C0392B", "Delay, below 50%"]].map(([c, t]) => (
+          {[["#2E7D32", "On Track, 75% and above"], ["#E0A800", "At Risk, 50–74%"], ["#C0392B", "Critical, below 50%"]].map(([c, t]) => (
             <span key={t} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "#5A5C5E" }}>
               <span style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />{t}
             </span>

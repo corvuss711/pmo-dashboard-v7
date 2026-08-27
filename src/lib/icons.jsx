@@ -1,6 +1,6 @@
 import React from "react";
 
-function Svg({ size = 16, strokeWidth = 1.75, children }) {
+function Svg({ size = 16, strokeWidth = 2.1, children }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"

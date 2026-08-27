@@ -67,11 +67,11 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       <div style={{ display: "flex", alignItems: "center", gap: 12, rowGap: 10, flexWrap: "wrap", padding: "14px 24px", background: C.bar,
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 63, zIndex: 30,
         boxShadow: "0 8px 16px -12px rgba(35,37,39,.45)" }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".12em", color: C.mute }}>INITIATIVE</span>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", color: C.mute }}>INITIATIVE</span>
         <div data-menu-root style={{ position: "relative" }}>
           <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
             style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: C.blue, color: "#fff",
-              border: 0, borderRadius: 6, fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}>
+              border: 0, borderRadius: 6, fontFamily: "inherit", fontWeight: 700, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}>
             All initiatives — Summary <span style={{ opacity: 0.7, fontSize: 10 }}>▾</span>
           </button>
           {menu === "ini" && (
@@ -81,7 +81,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
                 <button key={n.key} type="button"
                   onClick={() => { setMenu(null); if (n.key !== "summary") onNavigate(n.key); }}
                   style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 15px", border: 0,
-                    fontFamily: "inherit", fontSize: 13.5, cursor: "pointer", color: C.ink,
+                    fontFamily: "inherit", fontSize: 14.5, cursor: "pointer", color: C.ink,
                     background: n.key === "summary" ? C.blueWash : "#fff", fontWeight: n.key === "summary" ? 700 : 400 }}>
                   {n.label}
                 </button>
@@ -98,7 +98,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           onToggle={() => setMenu(menu === "range" ? null : "range")} /> */}
       </div>
 
-      <div style={{ padding: "22px 24px 44px", display: "flex", flexDirection: "column", gap: 26 }}>
+      <div style={{ padding: "28px 28px 56px", display: "flex", flexDirection: "column", gap: 32 }}>
         {MINISTRIES.map((m) => {
           const cards = INITIATIVES.filter((i) => i.ministry === m.key && i.key !== "green-contribution")
             .map((i) => {
@@ -158,11 +158,11 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
           return (
             <section key={m.key}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 15 }}>
                 <MinistryMark ministryKey={m.key} />
                 <div style={{ display: "flex", alignItems: "baseline", gap: 9, minWidth: 0 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
-                  <span style={{ fontSize: 11.5, color: C.faint, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.full}</span>
+                  <span style={{ fontSize: 14.5, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
+                  <span style={{ fontSize: 13, color: C.faint, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.full}</span>
                 </div>
                 <div style={{ flex: 1, height: 1, background: C.line2 }} />
               </div>
@@ -172,14 +172,14 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
                 // full width instead of sitting stuck in a 2-col grid slot.
                 <div style={{ display: "grid", gridTemplateColumns: "1fr" }}>{card(cards[0], false)}</div>
               ) : splitLayout ? (
-                <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
+                <div style={{ display: "flex", gap: 20, alignItems: "stretch" }}>
                   {card(big[0], "row")}
-                  <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+                  <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
                     {small.map((c) => card(c, "col"))}
                   </div>
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 20 }}>
                   {cards.map((c) => card(c, false))}
                 </div>
               )}
@@ -203,14 +203,43 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // OCEMS itself has no live source yet (a separate, deferred integration).
 const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc"]);
 
+const ICON = "#0B4A5A";
+const ICON_WASH = "#E2EFF3";
+const ICON_LINE = "#93C2D2";
+
+const SEG_BADGES = { apcd: "APCD", ocems: "CEMS" };
+
+function StatusBadge({ view }) {
+  if (!view?.status) return null;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "2px 9px", marginLeft: 8,
+      borderRadius: 999, background: view.track, color: view.flag, fontSize: 11, fontWeight: 800,
+      letterSpacing: ".05em", textTransform: "uppercase", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: view.flag }} />{view.status}
+    </span>
+  );
+}
+
+function SegBadge({ seg }) {
+  const label = SEG_BADGES[seg];
+  if (!label) return null;
+  return (
+    <span style={{ display: "inline-block", padding: "2px 8px", marginLeft: 8, borderRadius: 999,
+      background: ICON_WASH, border: `1px solid ${ICON_LINE}`, color: ICON,
+      fontSize: 11, fontWeight: 800, letterSpacing: ".06em", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+      {label}
+    </span>
+  );
+}
+
 function MinistryMark({ ministryKey }) {
   const Ico = ministryIcon(ministryKey);
   const a = ministryAccent(ministryKey);
   if (!Ico) return null;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24,
-      borderRadius: 5, background: a.bg, border: `1px solid ${a.bd}`, color: a.fg }}>
-      <Ico size={14} strokeWidth={1.9} />
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30,
+      borderRadius: 7, background: a.bg, border: `1px solid ${a.bd}`, color: a.fg }}>
+      <Ico size={19} strokeWidth={2.2} />
     </span>
   );
 }
@@ -242,29 +271,29 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
         ...(fill === "row" ? { flex: "1 1 0", minWidth: 0 } : null),
         ...(fill === "col" ? { flex: "1 1 auto", minWidth: 0 } : null)
       }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 12px",
+      <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "12px 16px",
         borderBottom: `1px solid ${a.bd}`, background: a.bg }}>
         {Ico && (
-          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, flex: "none",
-            borderRadius: 6, background: "#fff", border: `1px solid ${a.bd}`, color: a.fg }}>
-            <Ico size={15} strokeWidth={1.9} />
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, flex: "none",
+            borderRadius: 8, background: "#fff", border: `1px solid ${a.bd}`, color: a.fg }}>
+            <Ico size={17} strokeWidth={2.2} />
           </span>
         )}
-        <span style={{ fontSize: 13.5, fontWeight: 800, color: a.fg, letterSpacing: "-.01em",
+        <span style={{ fontSize: 16, fontWeight: 800, color: a.fg, letterSpacing: "-.01em",
           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</span>
         {i.owner && (
-          <span style={{ fontSize: 10.5, color: C.faint, fontWeight: 600, whiteSpace: "nowrap", flex: "none" }}>{i.owner}</span>
+          <span style={{ fontSize: 12, color: C.faint, fontWeight: 600, whiteSpace: "nowrap", flex: "none" }}>{i.owner}</span>
         )}
         {API_INTEGRATED_INITIATIVES.has(i.key) && <ApiIntegratedBadge />}
         {i.key === "iccc" && <DelhiOnlyBadge />}
         {i.note && (
           <span style={{ padding: "2px 7px", border: `1px solid ${C.line}`, background: "#fff", borderRadius: 999,
-            fontSize: 10, fontWeight: 700, color: C.mute, whiteSpace: "nowrap" }}>{i.note}</span>
+            fontSize: 11, fontWeight: 700, color: C.mute, whiteSpace: "nowrap" }}>{i.note}</span>
         )}
         <div style={{ flex: 1 }} />
-        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 21, height: 21, flex: "none",
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 25, height: 25, flex: "none",
           borderRadius: "50%", background: hovered ? a.fg : "#fff", border: `1px solid ${hovered ? a.fg : a.bd}`,
-          color: hovered ? "#fff" : a.fg, fontSize: 12, fontWeight: 700, transition: "all 0.16s ease" }}>›</span>
+          color: hovered ? "#fff" : a.fg, fontSize: 14, fontWeight: 700, transition: "all 0.16s ease" }}>›</span>
       </div>
       {/* Parivartan (exactly 2 metrics: Trucks, Buses) gets a side-by-side
           layout instead of the usual stacked rows -- requested 2026-08-24
@@ -273,11 +302,11 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
           other multi-metric card keeps the original stacked layout. */}
       {i.key === "parivartan" && ks.length === 2 ? (
         <div style={{ flex: 1, display: "flex" }}>
-          <div style={{ flex: "1 1 0", padding: "11px 13px 12px", borderRight: `1px solid ${C.line2}` }}>
+          <div style={{ flex: "1 1 0", padding: "18px 20px 19px", borderRight: `1px solid ${C.line2}` }}>
             <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail} iKey={i.key}
               cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
-          <div style={{ flex: "1 1 0", padding: "11px 13px 12px" }}>
+          <div style={{ flex: "1 1 0", padding: "18px 20px 19px" }}>
             <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail} iKey={i.key}
               cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
@@ -288,7 +317,7 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
           {ks.map((k, idx) => {
             const km = (ksMonth && ksMonth[idx]) || k;
             return (
-              <div key={k.id} style={{ padding: "10px 13px 11px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+              <div key={k.id} style={{ padding: "17px 20px 18px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
                 <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key}
                   cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
               </div>
@@ -304,14 +333,14 @@ function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
   const Ico = metricIcon(k.name, iKey);
   return (
     <>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-        {Ico && <span style={{ color: C.blue, opacity: 0.75, marginTop: 1, flex: "none" }}><Ico size={16} /></span>}
-        <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: C.body, lineHeight: 1.35, textWrap: "pretty" }}>
-          {k.name}{k.live && <LiveBadge />}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
+        {Ico && <span style={{ color: ICON, marginTop: 1, flex: "none" }}><Ico size={19} strokeWidth={2.3} /></span>}
+        <div style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: C.body, lineHeight: 1.4, textWrap: "pretty" }}>
+          {k.name}<SegBadge seg={k.seg} />{k.live && <LiveBadge />}<StatusBadge view={k} />
         </div>
         <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 9 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13, marginTop: 14 }}>
         <MetricPeriodBlock label="Aggregate" icon={LayersIcon} view={k} loading={cumulativeLoading} primary />
         <MetricPeriodBlock label="Cumulative" icon={CalendarRangeIcon} view={km} loading={monthLoading} />
       </div>
@@ -321,23 +350,23 @@ function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
 
 function MetricPeriodBlock({ label, icon: Ico, view, title, loading, primary }) {
   return (
-    <div title={title} style={{ minWidth: 0, padding: "6px 10px 7px", borderRadius: 6,
+    <div title={title} style={{ minWidth: 0, padding: "11px 14px 12px", borderRadius: 7,
       background: primary ? "#FAFAF8" : "#fff", border: `1px solid ${primary ? C.line : C.line2}` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, fontSize: 9, fontWeight: 800,
-        letterSpacing: ".1em", color: C.faint, textTransform: "uppercase" }}>
-        {Ico && <Ico size={11} strokeWidth={2} />}{label}
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9, fontSize: 11, fontWeight: 800,
+        letterSpacing: ".1em", color: C.mute, textTransform: "uppercase" }}>
+        {Ico && <span style={{ color: ICON }}><Ico size={14} strokeWidth={2.5} /></span>}{label}
       </div>
       {loading ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 7, height: 22, color: C.faint }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, height: 26, color: C.faint }}>
           <SpinnerIcon />
-          <span style={{ fontSize: 12, fontWeight: 600 }}>Loading…</span>
+          <span style={{ fontSize: 13.5, fontWeight: 600 }}>Loading…</span>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, height: 22, minWidth: 0 }}>
-          <span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1, color: view.flag, flex: "none",
+        <div style={{ display: "flex", alignItems: "center", gap: 11, height: 26, minWidth: 0 }}>
+          <span style={{ fontSize: 23, fontWeight: 800, lineHeight: 1, color: view.flag, flex: "none",
             fontFamily: "'Source Code Pro', monospace" }}>{view.pct}</span>
-          <Bar view={view} height={6} />
-          <span style={{ fontSize: 10.5, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.mute,
+          <Bar view={view} height={8} />
+          <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.mute,
             flex: "none", whiteSpace: "nowrap" }}>{view.frac}</span>
         </div>
       )}

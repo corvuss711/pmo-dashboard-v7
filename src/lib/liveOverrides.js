@@ -68,9 +68,9 @@ export function withNoDataMessage(view, message = "Data not provided") {
     frac: message,
     fracLong: message,
     bar: "0%",
-    flag: "#8A8C8E",
-    track: "#EDEDE8",
-    status: message,
+    flag: flag(0),
+    track: track(0),
+    status: statusWord(0),
     live: false,
   };
 }

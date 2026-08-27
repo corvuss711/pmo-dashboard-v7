@@ -1,6 +1,6 @@
 export function flag(p) { return p >= 75 ? "#2E7D32" : p >= 50 ? "#E0A800" : "#C0392B"; }
 export function track(p) { return p >= 75 ? "#E3EFE4" : p >= 50 ? "#FBF0D6" : "#FBE3DC"; }
-export function statusWord(p) { return p >= 75 ? "On track" : p >= 50 ? "Needs watching" : "Delay"; }
+export function statusWord(p) { return p >= 75 ? "On Track" : p >= 50 ? "At Risk" : "Critical"; }
 export const nf = (n) => Math.round(n).toLocaleString("en-IN");
 
 function toDateStr(d) {
@@ -509,7 +509,7 @@ export function metricView(def, id, key, region, rf) {
       pct: has ? nf(v) + (def.unit || "") : "\u2014",
       frac: has ? nf(num) + " / " + nf(den) : "no data",
       fracLong: has ? nf(num) + " " + def.numL + " across " + nf(den) + " " + def.denL : "no data in range",
-      bar: "0%", flag: "#5A5C5E", track: "#EDEDE8", status: has ? "Rate \u2014 no target band" : "No data" };
+      bar: "0%", flag: "#5A5C5E", track: "#EDEDE8", status: has ? "Rate \u2014 no target band" : "Critical" };
   }
   const p = has ? Math.round((num / den) * 100) : 0;
   const band = def.invert ? 100 - p : p;
@@ -518,9 +518,9 @@ export function metricView(def, id, key, region, rf) {
     frac: has ? nf(num) + " / " + nf(den) : "no data",
     fracLong: has ? nf(num) + " " + def.numL + " of " + nf(den) + " " + def.denL : "no data in range",
     bar: (has ? Math.min(100, p) : 0) + "%",
-    flag: has ? flag(band) : "#C4C4BE",
-    track: has ? track(band) : "#EDEDE8",
-    status: has ? statusWord(band) : "No data" };
+    flag: flag(has ? band : 0),
+    track: track(has ? band : 0),
+    status: statusWord(has ? band : 0) };
 }
 
 /* A segment either selects rows tagged with it, or rescales untagged rows by its
