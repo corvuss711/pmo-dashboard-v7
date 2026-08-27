@@ -8,6 +8,7 @@ import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
+import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon } from "../lib/icons.jsx";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
@@ -157,8 +158,13 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
           return (
             <section key={m.key}>
-              <div style={{ marginBottom: 11 }}>
-                <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <MinistryMark ministryKey={m.key} />
+                <div style={{ display: "flex", alignItems: "baseline", gap: 9, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".14em", color: C.ink }}>{m.key}</span>
+                  <span style={{ fontSize: 11.5, color: C.faint, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.full}</span>
+                </div>
+                <div style={{ flex: 1, height: 1, background: C.line2 }} />
               </div>
               {cards.length === 1 ? (
                 // A lone card in its section (e.g. MORTH once Green
@@ -197,7 +203,21 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // OCEMS itself has no live source yet (a separate, deferred integration).
 const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc"]);
 
+function MinistryMark({ ministryKey }) {
+  const Ico = ministryIcon(ministryKey);
+  const a = ministryAccent(ministryKey);
+  if (!Ico) return null;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24,
+      borderRadius: 5, background: a.bg, border: `1px solid ${a.bd}`, color: a.fg }}>
+      <Ico size={14} strokeWidth={1.9} />
+    </span>
+  );
+}
+
 function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+  const Ico = initiativeIcon(i.key);
+  const a = initiativeAccent(i.key);
   return (
     <article data-card
       onClick={onOpen}
@@ -205,14 +225,14 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
       onMouseLeave={onLeave}
       style={{
         background: "#fff",
-        border: `1.5px solid ${hovered ? C.blue : "#CBD5E1"}`,
-        borderRadius: 6,
+        border: `1px solid ${hovered ? a.bd : "#DEDED7"}`,
+        borderRadius: 9,
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
-        boxShadow: hovered ? "0 8px 22px rgba(29,63,134,.16)" : "0 2px 6px rgba(0,0,0,.06)",
+        boxShadow: hovered ? "0 12px 28px -8px rgba(29,63,134,.22)" : "0 1px 3px rgba(35,37,39,.07)",
         transform: hovered ? "translateY(-2px)" : "none",
-        transition: "all 0.15s ease",
+        transition: "all 0.16s ease",
         overflow: "hidden",
         // "row": equal-width column in a horizontal split (needs flex-basis 0 so both
         //   sides split space evenly regardless of content).
@@ -222,16 +242,29 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
         ...(fill === "row" ? { flex: "1 1 0", minWidth: 0 } : null),
         ...(fill === "col" ? { flex: "1 1 auto", minWidth: 0 } : null)
       }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: `1px solid ${C.line2}`, background: hovered ? C.blueWash : "#fff", transition: "background 0.15s ease" }}>
-        <span style={{ padding: "4px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{i.name}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 12px",
+        borderBottom: `1px solid ${a.bd}`, background: a.bg }}>
+        {Ico && (
+          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, flex: "none",
+            borderRadius: 6, background: "#fff", border: `1px solid ${a.bd}`, color: a.fg }}>
+            <Ico size={15} strokeWidth={1.9} />
+          </span>
+        )}
+        <span style={{ fontSize: 13.5, fontWeight: 800, color: a.fg, letterSpacing: "-.01em",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{i.name}</span>
+        {i.owner && (
+          <span style={{ fontSize: 10.5, color: C.faint, fontWeight: 600, whiteSpace: "nowrap", flex: "none" }}>{i.owner}</span>
+        )}
         {API_INTEGRATED_INITIATIVES.has(i.key) && <ApiIntegratedBadge />}
         {i.key === "iccc" && <DelhiOnlyBadge />}
         {i.note && (
-          <span style={{ padding: "3px 8px", border: "1px solid #D2D2CA", background: C.paper, borderRadius: 4,
-            fontSize: 11, fontWeight: 700, color: C.mute }}>{i.note}</span>
+          <span style={{ padding: "2px 7px", border: `1px solid ${C.line}`, background: "#fff", borderRadius: 999,
+            fontSize: 10, fontWeight: 700, color: C.mute, whiteSpace: "nowrap" }}>{i.note}</span>
         )}
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 14, color: C.blue, fontWeight: 700, marginLeft: 4 }}>›</span>
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 21, height: 21, flex: "none",
+          borderRadius: "50%", background: hovered ? a.fg : "#fff", border: `1px solid ${hovered ? a.fg : a.bd}`,
+          color: hovered ? "#fff" : a.fg, fontSize: 12, fontWeight: 700, transition: "all 0.16s ease" }}>›</span>
       </div>
       {/* Parivartan (exactly 2 metrics: Trucks, Buses) gets a side-by-side
           layout instead of the usual stacked rows -- requested 2026-08-24
@@ -240,12 +273,12 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
           other multi-metric card keeps the original stacked layout. */}
       {i.key === "parivartan" && ks.length === 2 ? (
         <div style={{ flex: 1, display: "flex" }}>
-          <div style={{ flex: "1 1 0", padding: "14px", borderRight: `2px solid ${C.line}` }}>
-            <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail}
+          <div style={{ flex: "1 1 0", padding: "11px 13px 12px", borderRight: `1px solid ${C.line2}` }}>
+            <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail} iKey={i.key}
               cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
-          <div style={{ flex: "1 1 0", padding: "14px" }}>
-            <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail}
+          <div style={{ flex: "1 1 0", padding: "11px 13px 12px" }}>
+            <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail} iKey={i.key}
               cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
           </div>
         </div>
@@ -255,8 +288,8 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
           {ks.map((k, idx) => {
             const km = (ksMonth && ksMonth[idx]) || k;
             return (
-              <div key={k.id} style={{ padding: "10px 14px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-                <MetricRow k={k} km={km} onDetail={onDetail}
+              <div key={k.id} style={{ padding: "10px 13px 11px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+                <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key}
                   cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
               </div>
             );
@@ -267,44 +300,46 @@ function InitiativeCard({ i, ks, ksMonth, cumulativeLoading, monthLoading, fill,
   );
 }
 
-function MetricRow({ k, km, onDetail, cumulativeLoading, monthLoading }) {
+function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
+  const Ico = metricIcon(k.name, iKey);
   return (
     <>
-      <div style={{ display: "flex", alignItems: "flex-start" }}>
-        <div style={{ flex: "1 1 0" }} />
-        <div style={{ fontSize: 15, color: "#5A5C5E", lineHeight: 1.3, textWrap: "pretty", fontWeight: 600, textAlign: "center" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+        {Ico && <span style={{ color: C.blue, opacity: 0.75, marginTop: 1, flex: "none" }}><Ico size={16} /></span>}
+        <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: C.body, lineHeight: 1.35, textWrap: "pretty" }}>
           {k.name}{k.live && <LiveBadge />}
         </div>
-        <div style={{ flex: "1 1 0", display: "flex", justifyContent: "flex-end" }}>
-          <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
-        </div>
+        <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
       </div>
-      <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-        <MetricPeriodBlock label="Aggregate" view={k} loading={cumulativeLoading} />
-        <div style={{ width: 2, alignSelf: "stretch", background: C.line }} />
-        <MetricPeriodBlock label="Cumulative" view={km} loading={monthLoading} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 9 }}>
+        <MetricPeriodBlock label="Aggregate" icon={LayersIcon} view={k} loading={cumulativeLoading} primary />
+        <MetricPeriodBlock label="Cumulative" icon={CalendarRangeIcon} view={km} loading={monthLoading} />
       </div>
     </>
   );
 }
 
-function MetricPeriodBlock({ label, view, title, loading }) {
+function MetricPeriodBlock({ label, icon: Ico, view, title, loading, primary }) {
   return (
-    <div style={{ flex: 1, minWidth: 0 }} title={title}>
-      <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: ".08em", color: C.mute, textTransform: "uppercase" }}>{label}</div>
+    <div title={title} style={{ minWidth: 0, padding: "6px 10px 7px", borderRadius: 6,
+      background: primary ? "#FAFAF8" : "#fff", border: `1px solid ${primary ? C.line : C.line2}` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, fontSize: 9, fontWeight: 800,
+        letterSpacing: ".1em", color: C.faint, textTransform: "uppercase" }}>
+        {Ico && <Ico size={11} strokeWidth={2} />}{label}
+      </div>
       {loading ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 6, color: C.faint }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, height: 22, color: C.faint }}>
           <SpinnerIcon />
           <span style={{ fontSize: 12, fontWeight: 600 }}>Loading…</span>
         </div>
       ) : (
-        <>
-          <div style={{ fontSize: 17, fontWeight: 800, color: C.ink, marginTop: 2, fontFamily: "'Source Code Pro', monospace" }}>{view.frac}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-            <Bar view={view} height={6} />
-            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "'Source Code Pro', monospace", color: "#5A5C5E" }}>{view.pct}</span>
-          </div>
-        </>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, height: 22, minWidth: 0 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1, color: view.flag, flex: "none",
+            fontFamily: "'Source Code Pro', monospace" }}>{view.pct}</span>
+          <Bar view={view} height={6} />
+          <span style={{ fontSize: 10.5, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.mute,
+            flex: "none", whiteSpace: "nowrap" }}>{view.frac}</span>
+        </div>
       )}
     </div>
   );
