@@ -1,32 +1,18 @@
-import { apiUrl } from "../../lib/api.js";
+import { apiUrl, cachedJson } from "../../lib/api.js";
 
 // fromDate/toDate ("YYYY-MM-DD", optional, required together): genuinely
 // scopes the result (confirmed 2026-08-24). Omit both for the cron's
 // standard "since launch" window. No credentials needed -- CAQM's upstream
 // requires no auth, so this is a plain passthrough through Node.
-export async function fetchMrsRrSummary(stateId, fromDate, toDate) {
+export function fetchMrsRrSummary(stateId, fromDate, toDate) {
   const qs = new URLSearchParams({ stateId, ...(fromDate ? { fromDate, toDate } : {}) });
-  const res = await fetch(apiUrl(`/metrics/mrs-rr-summary?${qs}`));
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data?.message || "Request failed");
-    err.status = res.status;
-    throw err;
-  }
-  return data; // { stateId, fromDate, toDate, metrics: [...] }
+  return cachedJson(apiUrl(`/metrics/mrs-rr-summary?${qs}`));
 }
 
 // Same as fetchMrsRrSummary but for several states in ONE request --
 // collapses N round trips into 1 (see server/index.js's mrs-rr-summary-multi
 // route). stateIds: array of numbers.
-export async function fetchMrsRrSummaryMulti(stateIds, fromDate, toDate) {
+export function fetchMrsRrSummaryMulti(stateIds, fromDate, toDate) {
   const qs = new URLSearchParams({ stateIds: stateIds.join(","), ...(fromDate ? { fromDate, toDate } : {}) });
-  const res = await fetch(apiUrl(`/metrics/mrs-rr-summary-multi?${qs}`));
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data?.message || "Request failed");
-    err.status = res.status;
-    throw err;
-  }
-  return data.results || []; // [{ stateId, cityId, metrics: [...] }, ...]
+  return cachedJson(apiUrl(`/metrics/mrs-rr-summary-multi?${qs}`), (d) => d.results || []);
 }

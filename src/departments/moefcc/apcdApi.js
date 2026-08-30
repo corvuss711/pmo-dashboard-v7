@@ -1,4 +1,4 @@
-import { apiUrl } from "../../lib/api.js";
+import { apiUrl, cachedJson } from "../../lib/api.js";
 
 // date (YYYY-MM-DD, optional): unlike CAQM/MRS-RR, APCD's cronDate
 // genuinely changes the data returned (confirmed against a real historical
@@ -12,38 +12,24 @@ import { apiUrl } from "../../lib/api.js";
 // moefcc.py's get_delta_since for why APCD needs a derived delta rather
 // than a direct range query (its snapshots are cumulative-as-of-date, not
 // period-scoped like ICCC's).
-export async function fetchApcdSummary(stateId, cityId, date, monthStart) {
+export function fetchApcdSummary(stateId, cityId, date, monthStart) {
   const qs = new URLSearchParams({
     stateId,
     ...(cityId != null ? { cityId } : {}),
     ...(date ? { date } : {}),
     ...(monthStart ? { monthStart } : {}),
   });
-  const res = await fetch(apiUrl(`/metrics/apcd-summary?${qs}`));
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data?.message || "Request failed");
-    err.status = res.status;
-    throw err;
-  }
-  return data; // { stateId, cityId, snapshotDate, metrics: [...] }
+  return cachedJson(apiUrl(`/metrics/apcd-summary?${qs}`));
 }
 
 // Same as fetchApcdSummary but for several states in ONE request --
 // collapses N round trips into 1. stateIds: array of numbers.
-export async function fetchApcdSummaryMulti(stateIds, cityId, date, monthStart) {
+export function fetchApcdSummaryMulti(stateIds, cityId, date, monthStart) {
   const qs = new URLSearchParams({
     stateIds: stateIds.join(","),
     ...(cityId != null ? { cityId } : {}),
     ...(date ? { date } : {}),
     ...(monthStart ? { monthStart } : {}),
   });
-  const res = await fetch(apiUrl(`/metrics/apcd-summary-multi?${qs}`));
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data?.message || "Request failed");
-    err.status = res.status;
-    throw err;
-  }
-  return data.results || []; // [{ stateId, cityId, metrics: [...] }, ...]
+  return cachedJson(apiUrl(`/metrics/apcd-summary-multi?${qs}`), (d) => d.results || []);
 }
