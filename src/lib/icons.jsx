@@ -123,6 +123,10 @@ export const ShieldIcon = (p) => (
 );
 
 const INITIATIVE_ICONS = {
+  "parivartan-trucks": TruckIcon,
+  "parivartan-buses": BusIcon,
+  apcd: FactoryIcon,
+  ocems: GaugeIcon,
   parivartan: TruckIcon,
   "green-contribution": LeafIcon,
   mrs: SweeperIcon,
@@ -158,6 +162,10 @@ const METRIC_ICON_RULES = [
 const DEFAULT_ACCENT = { fg: "#1D3F86", bg: "#EEF2FC", bd: "#C3D0EC" };
 
 const INITIATIVE_ACCENTS = {
+  "parivartan-trucks": { fg: "#1D3F86", bg: "#EEF2FC", bd: "#C3D0EC" },
+  "parivartan-buses": { fg: "#3730A3", bg: "#EEEDFC", bd: "#C7C4EE" },
+  apcd: { fg: "#BE123C", bg: "#FBEBEF", bd: "#EFC2CE" },
+  ocems: { fg: "#9A3412", bg: "#FBEFE7", bd: "#EDCDB6" },
   parivartan: { fg: "#1D3F86", bg: "#EEF2FC", bd: "#C3D0EC" },
   "green-contribution": { fg: "#0F766E", bg: "#E7F4F2", bd: "#B5DBD6" },
   mrs: { fg: "#0369A1", bg: "#E7F1F9", bd: "#B4D5EA" },

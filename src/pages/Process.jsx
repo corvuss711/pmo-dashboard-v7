@@ -50,7 +50,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   // itself only touches seg === "apcd" items, leaving "ocems" on the static
   // dataset untouched either way). Unlike CAQM's range, apcdDate is a real
   // lookup -- CPCB's cronDate genuinely changes the data returned.
-  const apcdLiveActive = initiative.key === "cems";
+  const apcdLiveActive = initiative.key === "apcd";
   const { byKey: apcdByKey, loading: apcdLoading } = useApcdSummary(apcdLiveActive, region, apcdDate);
 
   // Live ICCC data (Delhi dust control portal). No per-state breakdown at
@@ -101,7 +101,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l1 = applyCaqmOverrides(l1, "scc", "L1", caqmByKey);
     l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), "scc", "L1", caqmMonthByKey);
   }
-  if (initiative.key === "cems") {
+  if (initiative.key === "apcd") {
     // Same unconditional rule -- the "apcd" segment must never fall back to
     // the static dataset. "ocems" items pass through applyApcdOverrides
     // untouched (no live source yet).
@@ -203,7 +203,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                 generic range picker). apcdDate/range state and their
                 downstream use (rf, live fetches) are left intact so this is
                 a one-line restore later.
-            {initiative.key === "cems" && curSeg?.key === "apcd" ? (
+            {initiative.key === "apcd" ? (
               <SingleDatePicker date={apcdDate} setDate={setApcdDate} open={menu === "range"}
                 onToggle={() => setMenu(menu === "range" ? null : "range")} />
             ) : (
@@ -257,11 +257,13 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           {l2.length ? (
             <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
               {l2.map((m, idx) => {
-                const mm = l2Month[idx] || m;
+                // L2/L3 show a single figure. The one exception is OCEMS's
+                // headline L2 metric, which is tracked per period like an L1.
+                const split = initiative.key === "ocems" && idx === 0;
                 return (
                   <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                    <GridRow m={m} view={m} label="Aggregate" onDetail={() => setDetailId(m.id)} />
-                    <GridRow m={m} view={mm} label="Cumulative" />
+                    <GridRow m={m} view={m} label={split ? "Aggregate" : null} onDetail={() => setDetailId(m.id)} />
+                    {split && <GridRow m={m} view={l2Month[idx] || m} label="Cumulative" />}
                   </div>
                 );
               })}
@@ -294,8 +296,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
               <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
                 {l3.map((m) => (
                   <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                    <GridRow m={m} view={m} label="Aggregate" onDetail={() => setDetailId(m.id)} />
-                    <GridRow m={m} view={m} label="Cumulative" />
+                    <GridRow m={m} view={m} label={null} onDetail={() => setDetailId(m.id)} />
                   </div>
                 ))}
               </div>
@@ -341,28 +342,28 @@ function PeriodRow({ label, view }) {
 // pct/frac/flag/live. onDetail present only on the primary row.
 function GridRow({ m, view, label, onDetail }) {
   return (
-    <div data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18, padding: onDetail ? "9px 15px 3px" : "3px 15px 9px" }}>
+    <div data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18, padding: !onDetail ? "3px 15px 9px" : label ? "9px 15px 3px" : "11px 15px 12px" }}>
       <div style={{ minWidth: 0 }}>
         {onDetail ? (
           <>
             <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>
-              <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase" }}>{label}</span>
-              {m.stageLabel ? ` · ${m.stageLabel}` : ""}
+              {label && <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase" }}>{label}</span>}
+              {m.stageLabel ? `${label ? " · " : ""}${m.stageLabel}` : ""}
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
               {m.name}{view.live && <LiveBadge />}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".05em", color: C.faint, textTransform: "uppercase", lineHeight: 1.15 }}>{label}</div>
         )}
       </div>
       <span />
-      <span style={{ fontSize: onDetail ? 19 : 15, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: view.flag }}>{view.pct}</span>
+      <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: view.flag }}>{view.pct}</span>
       <span />
-      <span style={{ fontSize: onDetail ? 12.5 : 11, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{view.frac}</span>
+      <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{view.frac}</span>
       <span />
-      <Bar view={view} height={onDetail ? 8 : 6} />
+      <Bar view={view} height={8} />
       <div style={{ justifySelf: "end" }}>{onDetail && <InfoButton onClick={onDetail} />}</div>
     </div>
   );

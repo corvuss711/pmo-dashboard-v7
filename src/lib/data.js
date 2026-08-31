@@ -44,7 +44,7 @@ export function savePersistedRange(range) {
 
 /* NCR-level roll-ups. Numerators are summed across Delhi, UP, Rajasthan and Haryana
    from the same state figures the six state dashboards use. */
-export const INITIATIVES = [
+const BASE_INITIATIVES = [
   { key: "parivartan", name: "PARIVARTAN", ministry: "MORTH", owner: "MoRTH · NCRPB",
     splits: [{ key: "trucks", label: "Trucks", mult: 0.82, perf: 1.06 }, { key: "buses", label: "Buses", mult: 0.18, perf: 0.72 }],
     footNote: "Source and ownership are shown when a metric is opened.",
@@ -166,7 +166,9 @@ export const INITIATIVES = [
         context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 }
     ] },
 
-  { key: "green-contribution", name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",
+  // hidden: metric definitions are still being finalised, so it is kept in
+  // the dataset but shown nowhere (no tile, no dropdown entry).
+  { key: "green-contribution", hidden: true, name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",
     note: "Programme under design phase",
     footNote: "Metric definitions are being finalised; no data feed is live yet.",
     l1: [{ name: "% of tolls collecting Green Contribution", num: 0, den: 0,
@@ -249,7 +251,7 @@ export const INITIATIVES = [
         formula: "Road length awarded ÷ Road length tendered", rationale: "Measures progress from tendering to award of work.",
         agency: "ULBs", source: "To be sought from CAQM", numL: "km awarded", denL: "km tendered",
         context: ["Tender issued", "Work order awarded", "Redevelopment starts"], active: 1 },
-      { stage: 3, stageLabel: "Redevelopment", name: "% roads with redevelopment completed", num: 881, den: 1395,
+      { stage: 3, stageLabel: "Redevelopment", name: "% Roads with redevelopment completed against work orders", num: 881, den: 1395,
         formula: "Road length redeveloped ÷ Road length awarded", rationale: "Tracks execution against awarded work.",
         agency: "ULBs", source: "To be sought from CAQM", numL: "km completed", denL: "km awarded",
         context: ["Work order awarded", "Redevelopment completed", "Quality checked"], active: 1 },
@@ -293,39 +295,6 @@ export const INITIATIVES = [
         agency: "ULB", source: "To be sought from CAQM", numL: "tonnes", denL: "operational SCCs",
         context: ["SCC operationalised", "Malba received", "Intake recorded"], active: 2,
         glossary: "Intake is a rate, not a percentage — it has no target band." }
-    ] },
-
-  { key: "iccc", name: "ICCC monitoring of construction sites", ministry: "MOEFCC", owner: "MoEFCC · DPCC / SPCB",
-    footNote: "ICCC monitoring is live in Delhi; other states are yet to onboard.",
-    l1: [{ name: "% sites complying with identified interventions", num: 726, den: 1842,
-      formula: "Technically compliant sites (registered, camera & self audit app deployed) ÷ Total sites",
-      rationale: "Monitors registered sites that have deployed dust mitigation interventions.",
-      agency: "DPCC / SPCB", source: "Available on dust portal", numL: "technically compliant", denL: "total sites",
-      context: ["Total sites", "Registered on portal", "Camera & self audit app deployed"], active: 2,
-      glossary: "ICCC — Integrated Command and Control Centre." }],
-    stages: [
-      { n: 1, label: "Site registration", hint: "Sites registered on the dust portal and complying with interventions" },
-      { n: 2, label: "Enforcement", hint: "Inspections conducted and environmental compensation imposed" }
-    ],
-    metrics: [
-      { stage: 1, stageLabel: "Site registration", name: "Share of sites registered", num: 1190, den: 1842,
-        formula: "Sites registered on portal ÷ Total sites", rationale: "Measures integration of sites with the ICCC for real-time monitoring.",
-        agency: "DPCC / SPCB", source: "Available on dust portal", numL: "registered", denL: "total sites",
-        context: ["Total sites", "Registered on portal", "Interventions deployed"], active: 1 },
-      { stage: 1, stageLabel: "Site registration", name: "% sites complying with interventions", num: 726, den: 1190,
-        formula: "Sites with camera linkage & self audit app ÷ Sites registered on portal",
-        rationale: "Measures number of sites complying with norms.", agency: "DPCC / SPCB", source: "Available on dust portal",
-        numL: "compliant", denL: "registered",
-        context: ["Registered on portal", "Camera linked & self audit app", "Monitored live"], active: 1 },
-      { stage: 1, stageLabel: "Site registration", name: "% compliance with dust norms", num: 655, den: 1190,
-        formula: "Sites compliant with dust norms ÷ Sites registered on portal", rationale: "Monitors whether sites are actually controlling dust.",
-        agency: "DPCC / SPCB", source: "Available on dust portal", numL: "compliant", denL: "registered",
-        context: ["Registered on portal", "Dust norms checked", "Compliant site"], active: 1 },
-      { stage: 2, stageLabel: "Enforcement", name: "% of sites with EC imposed", num: 118, den: 430,
-        formula: "No. of sites with EC imposed ÷ No. of inspections conducted", rationale: "Monitors penalizations done on inspected sites.",
-        agency: "DPCC / SPCB", source: "Not yet identified", numL: "with EC imposed", denL: "inspections",
-        context: ["Violation detected", "Inspection conducted", "EC imposed"], active: 2,
-        glossary: "EC — Environmental Compensation, imposed on a site found in violation." }
     ] },
 
   { key: "greening", name: "Greening", ministry: "MOHUA", owner: "MoEFCC · State forest depts.",
@@ -404,7 +373,7 @@ export const INITIATIVES = [
         agency: "Industry / SPCB", source: "OCEMS Portal", numL: "installed", denL: "target industries",
         context: ["Target industries", "OCEMS installed", "Live data uploaded"], active: 1,
         glossary: "OCEMS — Online Continuous Emission Monitoring System." },
-      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts", num: 0, den: 0, noRangeScale: true,
+      { seg: "ocems", stage: 6, stageLabel: "OCEMS", name: "% industries with no red alerts where OCEMS is active", num: 0, den: 0, noRangeScale: true,
         formula: "Units with no red alerts ÷ Total industries with active OCEMS", rationale: "Identify compliant units for regulatory intervention.",
         agency: "SPCB", source: "OCEMS Portal", numL: "with no red alert", denL: "active OCEMS",
         context: ["OCEMS active", "CPCB norms applied", "No red alert"], active: 2 }
@@ -440,8 +409,77 @@ export const INITIATIVES = [
         rationale: "Monitor sanction delays.", agency: "NCRPB", source: "APCD Portal",
         numL: "payment approvals pending > SLA", denL: "approved installations",
         context: ["SPCB financial approval", "NCRPB payment approval pending", "NCRPB releases payment"], active: 1 }
-    ] }
+    ] },
+  { key: "iccc", name: "ICCC monitoring of construction sites", ministry: "MOEFCC", owner: "MoEFCC · DPCC / SPCB",
+    footNote: "ICCC monitoring is live in Delhi; other states are yet to onboard.",
+    l1: [{ name: "% sites complying with identified interventions", num: 726, den: 1842,
+      formula: "Technically compliant sites (registered, camera & self audit app deployed) ÷ Total sites",
+      rationale: "Monitors registered sites that have deployed dust mitigation interventions.",
+      agency: "DPCC / SPCB", source: "Available on dust portal", numL: "technically compliant", denL: "total sites",
+      context: ["Total sites", "Registered on portal", "Camera & self audit app deployed"], active: 2,
+      glossary: "ICCC — Integrated Command and Control Centre." }],
+    stages: [
+      { n: 1, label: "Site registration", hint: "Sites registered on the dust portal and complying with interventions" },
+      { n: 2, label: "Enforcement", hint: "Inspections conducted and environmental compensation imposed" }
+    ],
+    metrics: [
+      { stage: 1, stageLabel: "Site registration", name: "Share of sites registered", num: 1190, den: 1842,
+        formula: "Sites registered on portal ÷ Total sites", rationale: "Measures integration of sites with the ICCC for real-time monitoring.",
+        agency: "DPCC / SPCB", source: "Available on dust portal", numL: "registered", denL: "total sites",
+        context: ["Total sites", "Registered on portal", "Interventions deployed"], active: 1 },
+      { stage: 1, stageLabel: "Site registration", name: "% sites complying with interventions", num: 726, den: 1190,
+        formula: "Sites with camera linkage & self audit app ÷ Sites registered on portal",
+        rationale: "Measures number of sites complying with norms.", agency: "DPCC / SPCB", source: "Available on dust portal",
+        numL: "compliant", denL: "registered",
+        context: ["Registered on portal", "Camera linked & self audit app", "Monitored live"], active: 1 },
+      { stage: 1, stageLabel: "Site registration", name: "% compliance with dust norms", num: 655, den: 1190,
+        formula: "Sites compliant with dust norms ÷ Sites registered on portal", rationale: "Monitors whether sites are actually controlling dust.",
+        agency: "DPCC / SPCB", source: "Available on dust portal", numL: "compliant", denL: "registered",
+        context: ["Registered on portal", "Dust norms checked", "Compliant site"], active: 1 },
+      { stage: 2, stageLabel: "Enforcement", name: "% of sites with EC imposed", num: 118, den: 430,
+        formula: "No. of sites with EC imposed ÷ No. of inspections conducted", rationale: "Monitors penalizations done on inspected sites.",
+        agency: "DPCC / SPCB", source: "Not yet identified", numL: "with EC imposed", denL: "inspections",
+        context: ["Violation detected", "Inspection conducted", "EC imposed"], active: 2,
+        glossary: "EC — Environmental Compensation, imposed on a site found in violation." }
+    ] },
+
 ];
+
+// Two initiatives are tracked as one dataset upstream but presented as
+// separate initiatives: Parivartan by vehicle class, and the MoEFCC
+// industries tile by scheme. Splitting here rather than in the pages means
+// the tiles, the Process page, the initiative dropdown and routing all see
+// them as first-class initiatives -- and the segment pickers that used to
+// switch between them disappear on their own, since a split initiative has
+// no `splits`.
+const SPLIT_INITIATIVES = {
+  parivartan: [
+    { seg: "trucks", key: "parivartan-trucks", name: "PARIVARTAN \u2014 Trucks" },
+    { seg: "buses", key: "parivartan-buses", name: "PARIVARTAN \u2014 Buses" },
+  ],
+  cems: [
+    { seg: "apcd", key: "apcd", name: "APCD for Industries" },
+    { seg: "ocems", key: "ocems", name: "OCEMS Installations" },
+  ],
+};
+
+// Same rule segApply uses: a seg-tagged list is filtered to this segment,
+// an untagged list is shared by every segment (e.g. Parivartan's L2/L3,
+// one process pipeline serving both vehicle classes).
+const pickSeg = (defs, seg) =>
+  (defs || []).some((d) => d.seg) ? defs.filter((d) => d.seg === seg) : defs || [];
+
+export const INITIATIVES = BASE_INITIATIVES.flatMap((ini) => {
+  const parts = SPLIT_INITIATIVES[ini.key];
+  if (!parts) return [ini];
+  return parts.map(({ seg, key, name }) => ({
+    ...ini, key, name, splits: undefined,
+    l1: pickSeg(ini.l1, seg), metrics: pickSeg(ini.metrics, seg), l3: pickSeg(ini.l3, seg),
+  }));
+});
+
+
+export const VISIBLE_INITIATIVES = INITIATIVES.filter((i) => !i.hidden);
 
 export const MINISTRIES = [
   { key: "MORTH", full: "Ministry of Road Transport and Highways" },
@@ -450,15 +488,8 @@ export const MINISTRIES = [
 ];
 
 export const NAV = [
-  { key: "summary", label: "All initiatives — Summary" },
-  { key: "parivartan", label: "PARIVARTAN" },
-  { key: "green-contribution", label: "Green Contribution" },
-  { key: "mrs", label: "Mechanized Road Sweeping" },
-  { key: "road", label: "Road Repair & Remediation" },
-  { key: "scc", label: "SCC setup and operations" },
-  { key: "greening", label: "Greening" },
-  { key: "iccc", label: "ICCC monitoring of large construction sites" },
-  { key: "cems", label: "Installation of CEMS and APCD for industries" }
+  { key: "summary", label: "All initiatives \u2014 Summary" },
+  ...VISIBLE_INITIATIVES.map((i) => ({ key: i.key, label: i.name })),
 ];
 
 /* Per-state split of each NCR roll-up: [share of denominator, relative performance].
@@ -474,6 +505,10 @@ export const REGION_W = {
   greening: [[0.28, 1.35], [0.33, 0.85], [0.18, 0.45], [0.21, 1.10]],
   cems: [[0.20, 1.40], [0.37, 0.75], [0.18, 0.45], [0.25, 1.00]]
 };
+
+for (const [base, parts] of Object.entries(SPLIT_INITIATIVES)) {
+  for (const p of parts) REGION_W[p.key] = REGION_W[base];
+}
 
 export function regionSlice(def, key, region) {
   const idx = REGIONS.indexOf(region);

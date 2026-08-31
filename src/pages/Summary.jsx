@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { INITIATIVES, MINISTRIES, NAV, l1Of, l2Of, l3Of, flag, track, statusWord, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
+import { VISIBLE_INITIATIVES, MINISTRIES, NAV, l1Of, l2Of, l3Of, flag, track, statusWord, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { AqiWidget } from "../lib/AqiWidget.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
@@ -53,7 +53,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       let ks = l1Of(i, "All-Delhi NCR", rf, null, true);
       // "apcd" segment items get live data; "ocems" items on the same
       // card pass through untouched (no live source yet).
-      if (i.key === "cems") ks = applyApcdOverrides(ks, apcdByKey);
+      if (i.key === "apcd") ks = applyApcdOverrides(ks, apcdByKey);
       // Unconditional -- MRS/Road Repair must never fall back to the
       // static dataset. Both of MRS's L1 tiles ("% MRS deployed",
       // "% route covered") have no matching CAQM rule (confirmed
@@ -70,7 +70,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       // stay an honest 0/0 either way). CEMS, MRS/RR and ICCC each
       // get a fresh static base + a month-scoped override.
       let ksMonth = ks;
-      if (i.key === "cems") {
+      if (i.key === "apcd") {
         ksMonth = applyApcdOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
       }
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") {
@@ -81,26 +81,36 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       }
 
       let cumulativeLoading = false, monthLoading = false;
-      if (i.key === "cems") { cumulativeLoading = apcdLoading; monthLoading = apcdMonthLoading; }
+      if (i.key === "apcd") { cumulativeLoading = apcdLoading; monthLoading = apcdMonthLoading; }
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") { cumulativeLoading = caqmLoading; monthLoading = caqmMonthLoading; }
       if (i.key === "iccc") { cumulativeLoading = icccLoading; monthLoading = icccMonthLoading; }
 
       let l2 = l2Of(i, "All-Delhi NCR", rf, null, true);
       let l3 = l3Of(i, "All-Delhi NCR", rf, null, true);
-      if (i.key === "cems") { l2 = applyApcdOverrides(l2, apcdByKey); l3 = applyApcdOverrides(l3, apcdByKey); }
+      if (i.key === "apcd") { l2 = applyApcdOverrides(l2, apcdByKey); l3 = applyApcdOverrides(l3, apcdByKey); }
       if (i.key === "mrs" || i.key === "road") l2 = applyCaqmOverrides(l2, i.key, "L2", caqmByKey);
       if (i.key === "iccc") l2 = applyIcccOverrides(l2, icccByKey);
 
       let l2Month = l2;
-      if (i.key === "cems") l2Month = applyApcdOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
+      if (i.key === "apcd") l2Month = applyApcdOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
       if (i.key === "mrs" || i.key === "road") l2Month = applyCaqmOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), i.key, "L2", caqmMonthByKey);
       if (i.key === "iccc") l2Month = applyIcccOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
 
-      const extra = i.key === "parivartan" ? l2.filter((x) => x.name === "% registered on portal") : [];
+      // An L2 metric promoted onto the front tile alongside the L1 headline:
+      // Parivartan's portal registration, and OCEMS's installation base.
+      const extraIdx = i.key.startsWith("parivartan")
+        ? l2.findIndex((x) => x.name === "% registered on portal")
+        : i.key === "ocems" ? 0 : -1;
+      const promoted = extraIdx >= 0 ? l2[extraIdx] : null;
+      const extra = promoted ? [promoted] : [];
+      const extraMonth = promoted ? [l2Month[extraIdx] || promoted] : [];
+      // L2 metrics show a single figure; OCEMS's promoted one is the one
+      // exception, tracked per period like an L1.
+      const extraSplit = i.key === "ocems";
 
-      return { i, ks, ksMonth, l2, l2Month, l3, extra, cumulativeLoading, monthLoading };
+      return { i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, extraSplit, cumulativeLoading, monthLoading };
   };
-  const allCards = INITIATIVES.filter((i) => i.key !== "green-contribution").map(buildCard);
+  const allCards = VISIBLE_INITIATIVES.map(buildCard);
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -165,13 +175,22 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           // With more cards than that (e.g. 4), a plain grid reads better than a lopsided stack.
           const splitLayout = big.length === 1 && small.length >= 1 && small.length <= 2 && big.length + small.length === cards.length;
 
-          const card = ({ i, ks, ksMonth, l2, l3, extra, cumulativeLoading, monthLoading }, fill) => (
-            <InitiativeCard key={i.key} i={i} ks={ks} ksMonth={ksMonth} l2={l2} l3={l3} extra={extra}
-              cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} fill={fill}
-              hovered={hoveredCard === i.key}
-              onHover={() => setHoveredCard(i.key)}
+          // Each row of the 2-up grid sizes to its taller card, so only a card
+          // whose row-mate has MORE metric rows ends up padded with white
+          // space. That one stacks its period blocks to fill the height;
+          // cards paired with an equally short sibling stay side by side.
+          const rowsOf = (c) => c.ks.length + (c.extra?.length || 0);
+          const stackedFlags = cards.map((c, idx) => {
+            const mate = cards[idx % 2 === 0 ? idx + 1 : idx - 1];
+            return mate ? rowsOf(c) < rowsOf(mate) : false;
+          });
+
+          const card = (c, fill, stacked) => (
+            <InitiativeCard key={c.i.key} {...c} fill={fill} stacked={stacked}
+              hovered={hoveredCard === c.i.key}
+              onHover={() => setHoveredCard(c.i.key)}
               onLeave={() => setHoveredCard(null)}
-              onOpen={() => onNavigate(i.key, "All-Delhi NCR")}
+              onOpen={() => onNavigate(c.i.key, "All-Delhi NCR")}
               onDetail={(k) => setDetail(k)} />
           );
 
@@ -199,7 +218,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 20 }}>
-                  {cards.map((c) => card(c, false))}
+                  {cards.map((c, idx) => card(c, false, stackedFlags[idx]))}
                 </div>
               )}
             </section>
@@ -216,17 +235,12 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 // per-metric LiveBadge on purpose: a tile can be wired to a real backend
 // while some of its metrics still honestly show 0/0 (the upstream just has
 // no field for that one) -- "API Integrated" only claims the tile is
-// connected, not that every value on it is currently live. "cems" is
-// excluded even though its "apcd" segment is live, because the tile is
-// labeled "CEMS and APCD for industries" and covers both together, and
-// OCEMS itself has no live source yet (a separate, deferred integration).
-const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc"]);
+// connected, not that every value on it is currently live. "ocems" is
+// absent because OCEMS has no live source yet (a separate, deferred
+// integration); it only shares this badge's ministry, not its feed.
+const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc", "apcd"]);
 
 const ICON = "#0B4A5A";
-const ICON_WASH = "#E2EFF3";
-const ICON_LINE = "#93C2D2";
-
-const SEG_BADGES = { apcd: "APCD", ocems: "CEMS" };
 
 function overallBand(views) {
   if (!views || views.length === 0) return 0;
@@ -307,29 +321,16 @@ function DataMenu({ open, onToggle }) {
   );
 }
 
-function segScopeLabel(items) {
-  const segs = [...new Set(items.map((m) => SEG_BADGES[m.seg]).filter(Boolean))];
-  if (segs.length === 0) return null;
-  return segs.length === 1 ? segs[0] : segs.join(" + ");
-}
-
-function MatrixRow({ label, sub, items }) {
+function MetricsRow({ label, items }) {
   if (!items || items.length === 0) return null;
-  const scope = segScopeLabel(items);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
       <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".04em", color: C.mute, whiteSpace: "nowrap" }}>
-        {label} <span style={{ fontWeight: 600, color: C.faint }}>({sub})</span>
+        {label}
       </span>
-      {scope && (
-        <span style={{ padding: "2px 8px", borderRadius: 999, background: ICON_WASH, border: `1px solid ${ICON_LINE}`,
-          color: ICON, fontSize: 10.5, fontWeight: 800, letterSpacing: ".06em", whiteSpace: "nowrap", flex: "none" }}>
-          {scope}
-        </span>
-      )}
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
         {items.map((m) => (
-          <span key={m.id} title={`${m.name}${SEG_BADGES[m.seg] ? ` (${SEG_BADGES[m.seg]})` : ""} — ${m.status}`}
+          <span key={m.id} title={`${m.name} — ${m.status}`}
             style={{ width: 11, height: 11, borderRadius: "50%", background: m.flag,
               border: "1px solid rgba(0,0,0,.10)", flex: "none" }} />
         ))}
@@ -349,18 +350,6 @@ function StatusBadge({ view }) {
   );
 }
 
-function SegBadge({ seg }) {
-  const label = SEG_BADGES[seg];
-  if (!label) return null;
-  return (
-    <span style={{ display: "inline-block", padding: "2px 8px", marginLeft: 8, borderRadius: 999,
-      background: ICON_WASH, border: `1px solid ${ICON_LINE}`, color: ICON,
-      fontSize: 11, fontWeight: 800, letterSpacing: ".06em", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-      {label}
-    </span>
-  );
-}
-
 function MinistryMark({ ministryKey }) {
   const Ico = ministryIcon(ministryKey);
   const a = ministryAccent(ministryKey);
@@ -373,9 +362,10 @@ function MinistryMark({ ministryKey }) {
   );
 }
 
-function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, extraSplit, stacked, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   const Ico = initiativeIcon(i.key);
   const a = initiativeAccent(i.key);
+  const rows = [...ks, ...(extra || [])];
   return (
     <article data-card
       onClick={onOpen}
@@ -421,56 +411,30 @@ function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, cumulativeLoading, mont
           borderRadius: "50%", background: hovered ? a.fg : "#fff", border: `1px solid ${hovered ? a.fg : a.bd}`,
           color: hovered ? "#fff" : a.fg, fontSize: 14, fontWeight: 700, transition: "all 0.16s ease" }}>›</span>
       </div>
-      {/* Parivartan (exactly 2 metrics: Trucks, Buses) gets a side-by-side
-          layout instead of the usual stacked rows -- requested 2026-08-24
-          once the card stretches to full width, to make use of the extra
-          horizontal room. Buses on the left, Trucks on the right; every
-          other multi-metric card keeps the original stacked layout. */}
-      {i.key === "parivartan" && ks.length === 2 ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex" }}>
-            <div style={{ flex: "1 1 0", padding: "18px 20px 19px", borderRight: `1px solid ${C.line2}` }}>
-              <MetricRow k={ks[0]} km={(ksMonth && ksMonth[0]) || ks[0]} onDetail={onDetail} iKey={i.key}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        {rows.map((k, idx) => {
+          const km = (idx < ks.length ? ksMonth?.[idx] : extraMonth?.[idx - ks.length]) || k;
+          return (
+            <div key={k.id} style={{ padding: "17px 20px 18px", borderBottom: idx < rows.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+              <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key} stacked={stacked}
+                cumulative={idx < ks.length || extraSplit}
                 cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
             </div>
-            <div style={{ flex: "1 1 0", padding: "18px 20px 19px" }}>
-              <MetricRow k={ks[1]} km={(ksMonth && ksMonth[1]) || ks[1]} onDetail={onDetail} iKey={i.key}
-                cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
-            </div>
-          </div>
-          {extra?.map((x) => (
-            <div key={x.id} style={{ padding: "17px 20px 18px", borderTop: `1px solid ${C.line2}` }}>
-              <MetricRow k={x} km={x} onDetail={onDetail} iKey={i.key}
-                cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: ks.length === 1 ? "flex-start" : "center" }}>
-          {ks.length === 1 && <div style={{ flex: "0.55 1 0" }} />}
-          {ks.map((k, idx) => {
-            const km = (ksMonth && ksMonth[idx]) || k;
-            return (
-              <div key={k.id} style={{ padding: "17px 20px 18px", borderBottom: idx < ks.length - 1 ? `1px solid ${C.line2}` : "none" }}>
-                <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key}
-                  cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
-              </div>
-            );
-          })}
-        </div>
-      )}
+          );
+        })}
+      </div>
       {(l2?.length > 0 || l3?.length > 0) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "12px 20px 13px",
           borderTop: `1px solid ${C.line2}`, background: "#FAFAF8" }}>
-          <MatrixRow label="L2 Matrix" sub="Outcome Level" items={l2} />
-          <MatrixRow label="L3 Matrix" sub="Output Level" items={l3} />
+          <MetricsRow label="L2 Metrics" items={l2} />
+          <MetricsRow label="L3 Metrics" items={l3} />
         </div>
       )}
     </article>
   );
 }
 
-function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
+function MetricRow({ k, km, onDetail, iKey, stacked, cumulative = true, cumulativeLoading, monthLoading }) {
   const Ico = metricIcon(k.name, iKey);
   const a = initiativeAccent(iKey);
   return (
@@ -478,13 +442,15 @@ function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
       <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
         {Ico && <span style={{ color: a.fg, marginTop: 1, flex: "none" }}><Ico size={19} strokeWidth={2.3} /></span>}
         <div style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: C.body, lineHeight: 1.4, textWrap: "pretty" }}>
-          {k.name}<SegBadge seg={k.seg} />{k.live && <LiveBadge />}<StatusBadge view={k} />
+          {k.name}{k.live && <LiveBadge />}<StatusBadge view={k} />
         </div>
         <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13, marginTop: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: stacked || !cumulative ? "1fr" : "1fr 1fr", gap: stacked ? 10 : 13, marginTop: 14 }}>
         <MetricPeriodBlock label="Aggregate" title="Total" icon={LayersIcon} accent={a.fg} view={k} loading={cumulativeLoading} primary />
-        <MetricPeriodBlock label="Cumulative" title="Till date" icon={CalendarRangeIcon} accent={a.fg} view={km} loading={monthLoading} />
+        {cumulative && (
+          <MetricPeriodBlock label="Cumulative" title="Till date" icon={CalendarRangeIcon} accent={a.fg} view={km} loading={monthLoading} />
+        )}
       </div>
     </>
   );

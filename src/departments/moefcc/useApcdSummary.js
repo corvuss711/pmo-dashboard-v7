@@ -55,7 +55,9 @@ export function useApcdSummary(active, region, date, monthStart) {
   return { byKey, loading };
 }
 
-export function useApcdSummaryByState(active) {
+// monthStart (YYYY-MM-DD, optional): this month's delta per state instead of
+// the cumulative snapshot -- see useApcdSummary/moefcc.py's get_delta_since.
+export function useApcdSummaryByState(active, monthStart) {
   const [byState, setByState] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -68,7 +70,7 @@ export function useApcdSummaryByState(active) {
     let cancelled = false;
     setLoading(true);
 
-    fetchApcdSummaryMulti(Object.values(CPCB_STATE_IDS), undefined, undefined, undefined)
+    fetchApcdSummaryMulti(Object.values(CPCB_STATE_IDS), undefined, undefined, monthStart)
       .then((responses) => {
         if (!cancelled) setByState(byStateApcdMetrics(responses));
       })
@@ -83,7 +85,7 @@ export function useApcdSummaryByState(active) {
     return () => {
       cancelled = true;
     };
-  }, [active]);
+  }, [active, monthStart]);
 
   return { byState, loading };
 }

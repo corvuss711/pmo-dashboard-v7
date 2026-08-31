@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange } from "../lib/data.js";
+import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, PinIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummaryByState } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
@@ -11,6 +11,19 @@ const LayersIcon = (
     <path d="M3 6h18M7 12h10M11 18h2" />
   </svg>
 );
+
+function PeriodBlock({ label, view }) {
+  return (
+    <div style={{ marginTop: 9, padding: "7px 9px 8px", borderRadius: 6, background: "#FAFAF8", border: `1px solid ${C.line2}` }}>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".09em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
+        <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1, color: view.flag, fontFamily: "'Source Code Pro', monospace", flex: "none" }}>{view.pct}</span>
+        <Bar view={view} height={6} />
+      </div>
+      <div style={{ fontSize: 10.5, fontFamily: "'Source Code Pro', monospace", color: C.mute, marginTop: 5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{view.frac}</div>
+    </div>
+  );
+}
 
 /* Comparative level: one card per state for a single initiative.
    Shows L1 metric and all L2 process metrics with segment selection (e.g. Trucks/Buses). */
@@ -31,9 +44,20 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
 
   const caqmActive = initiative.key === "mrs" || initiative.key === "road" || initiative.key === "scc";
   const { byState: caqmByState, loading: caqmLoading } = useMrsRrSummaryByState(caqmActive);
-  const apcdActive = initiative.key === "cems";
+  const apcdActive = initiative.key === "apcd";
   const { byState: apcdByState, loading: apcdLoading } = useApcdSummaryByState(apcdActive);
-  const liveLoading = caqmActive ? caqmLoading : apcdActive ? apcdLoading : false;
+
+  // Second, month-scoped pass for the L1 "Cumulative" figure, mirroring what
+  // Summary and Process already show. Same windows as there: Aggregate is the
+  // backend's since-launch snapshot (no dates), Cumulative is 1st-of-month
+  // through today.
+  const thisMonth = defaultRange();
+  const { byState: caqmMonthByState, loading: caqmMonthLoading } = useMrsRrSummaryByState(caqmActive, thisMonth.from, thisMonth.to);
+  const { byState: apcdMonthByState, loading: apcdMonthLoading } = useApcdSummaryByState(apcdActive, thisMonth.from);
+
+  const liveLoading = caqmActive ? (caqmLoading || caqmMonthLoading)
+    : apcdActive ? (apcdLoading || apcdMonthLoading)
+    : false;
 
   return (
     <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Source Sans 3', system-ui, sans-serif", color: C.body }}>
@@ -160,10 +184,21 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           if (initiative.key === "scc") {
             ks = applyCaqmOverrides(ks, "scc", "L1", caqmByState?.[r]);
           }
-          if (initiative.key === "cems") {
+          if (initiative.key === "apcd") {
             ks = applyApcdOverrides(ks, apcdByState?.[r]);
             l2s = applyApcdOverrides(l2s, apcdByState?.[r]);
           }
+
+          // Month-scoped L1, from a fresh static base so the aggregate pass
+          // above is not mutated. Initiatives with no live source fall back to
+          // the same view, which is an honest 0/0 either way.
+          let ksMonth = ks;
+          const freshL1 = () => l1Of(initiative, r, rf, activeSegKey);
+          if (initiative.key === "mrs" || initiative.key === "road") {
+            ksMonth = applyCaqmOverrides(freshL1(), initiative.key, "L1", caqmMonthByState?.[r]);
+          }
+          if (initiative.key === "scc") ksMonth = applyCaqmOverrides(freshL1(), "scc", "L1", caqmMonthByState?.[r]);
+          if (initiative.key === "apcd") ksMonth = applyApcdOverrides(freshL1(), apcdMonthByState?.[r]);
 
           return (
             <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)", overflow: "hidden" }}>
@@ -179,7 +214,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
                     LEVEL 1 METRIC
                   </span>
                 </div>
-                {ks.map((k) => (
+                {ks.map((k, kIdx) => (
                   <div key={k.id} style={{ padding: "8px 14px 14px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
                       <div title={k.name} style={{ fontSize: 12, color: C.ink, fontWeight: 700, letterSpacing: "-.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
@@ -187,11 +222,8 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
                       </div>
                       <InfoButton onClick={() => setDetail(k)} />
                     </div>
-                    <div style={{ fontSize: 19, fontWeight: 800, color: C.ink, marginTop: 5, fontFamily: "'Source Code Pro', monospace" }}>{k.frac}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 7 }}>
-                      <Bar view={k} height={7} />
-                      <span style={{ fontSize: 11.5, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: k.flag }}>{k.pct}</span>
-                    </div>
+                    <PeriodBlock label="Aggregate" view={k} />
+                    <PeriodBlock label="Cumulative" view={(ksMonth && ksMonth[kIdx]) || k} />
                   </div>
                 ))}
               </div>
