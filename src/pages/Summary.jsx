@@ -472,30 +472,31 @@ function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, cumulativeLoading, mont
 
 function MetricRow({ k, km, onDetail, iKey, cumulativeLoading, monthLoading }) {
   const Ico = metricIcon(k.name, iKey);
+  const a = initiativeAccent(iKey);
   return (
     <>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
-        {Ico && <span style={{ color: ICON, marginTop: 1, flex: "none" }}><Ico size={19} strokeWidth={2.3} /></span>}
+        {Ico && <span style={{ color: a.fg, marginTop: 1, flex: "none" }}><Ico size={19} strokeWidth={2.3} /></span>}
         <div style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, color: C.body, lineHeight: 1.4, textWrap: "pretty" }}>
           {k.name}<SegBadge seg={k.seg} />{k.live && <LiveBadge />}<StatusBadge view={k} />
         </div>
         <InfoButton onClick={(e) => { e.stopPropagation(); onDetail(k); }} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13, marginTop: 14 }}>
-        <MetricPeriodBlock label="Aggregate" title="Total" icon={LayersIcon} view={k} loading={cumulativeLoading} primary />
-        <MetricPeriodBlock label="Cumulative" title="Till date" icon={CalendarRangeIcon} view={km} loading={monthLoading} />
+        <MetricPeriodBlock label="Aggregate" title="Total" icon={LayersIcon} accent={a.fg} view={k} loading={cumulativeLoading} primary />
+        <MetricPeriodBlock label="Cumulative" title="Till date" icon={CalendarRangeIcon} accent={a.fg} view={km} loading={monthLoading} />
       </div>
     </>
   );
 }
 
-function MetricPeriodBlock({ label, icon: Ico, view, title, loading, primary }) {
+function MetricPeriodBlock({ label, icon: Ico, accent, view, title, loading, primary }) {
   return (
     <div title={title} style={{ minWidth: 0, padding: "11px 14px 12px", borderRadius: 7,
       background: primary ? "#FAFAF8" : "#fff", border: `1px solid ${primary ? C.line : C.line2}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9, fontSize: 11, fontWeight: 800,
         letterSpacing: ".1em", color: C.mute, textTransform: "uppercase" }}>
-        {Ico && <span style={{ color: ICON }}><Ico size={14} strokeWidth={2.5} /></span>}{label}
+        {Ico && <span style={{ color: accent || ICON }}><Ico size={14} strokeWidth={2.5} /></span>}{label}
       </div>
       {loading ? (
         <div style={{ display: "flex", alignItems: "center", gap: 7, height: 26, color: C.faint }}>
