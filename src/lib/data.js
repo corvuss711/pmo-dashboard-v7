@@ -505,12 +505,11 @@ export function metricView(def, id, key, region, rf) {
   const has = den > 0;
   if (def.rate) {
     const v = has ? Math.round(num / den) : 0;
-    const band = has ? 100 : 0;
-    return { ...def, id, raw: band,
+    return { ...def, id, raw: 100,
       pct: has ? nf(v) + (def.unit || "") : "\u2014",
       frac: has ? nf(num) + " / " + nf(den) : "no data",
       fracLong: has ? nf(num) + " " + def.numL + " across " + nf(den) + " " + def.denL : "no data in range",
-      bar: "0%", flag: flag(band), track: track(band), status: statusWord(band) };
+      bar: "0%", flag: "#5A5C5E", track: "#EDEDE8", status: has ? "Rate \u2014 no target band" : "Critical" };
   }
   const p = has ? Math.round((num / den) * 100) : 0;
   const band = def.invert ? 100 - p : p;

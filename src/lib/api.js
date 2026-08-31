@@ -6,7 +6,6 @@ export function apiUrl(path) {
 }
 
 const TTL_MS = 5 * 60 * 1000;
-const REQUEST_TIMEOUT_MS = 15000;
 
 const cache = new Map();
 const inFlight = new Map();
@@ -18,7 +17,7 @@ export function cachedJson(url, parse) {
   const pending = inFlight.get(url);
   if (pending) return pending;
 
-  const promise = fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+  const promise = fetch(url)
     .then(async (res) => {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
