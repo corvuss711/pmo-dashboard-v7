@@ -102,6 +102,7 @@ api.get("/me", (req, res) => {
 // proxy block here (session cookies, /ocems/* routes) once that lands, with
 // its own DB persistence per the department-per-file backend architecture.
 const PY_BACKEND_URL = process.env.PY_BACKEND_URL || "http://74.225.180.0:8011";
+const BACKEND_TIMEOUT_MS = Number(process.env.BACKEND_TIMEOUT_MS || 12000);
 
 // CAQM (MRS + Road Repair): no session/cookie involved -- CAQM's upstream
 // needs no auth, so this is a plain passthrough.
@@ -121,7 +122,7 @@ metrics.get("/mrs-rr-summary", async (req, res) => {
       ...(cityId != null ? { cityId } : {}),
       ...(fromDate ? { fromDate, toDate } : {}),
     });
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary?${qs}`);
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary?${qs}`, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "MRS/RR metrics request failed" });
@@ -149,7 +150,7 @@ metrics.get("/mrs-rr-summary-multi", async (req, res) => {
       ...(cityId != null ? { cityId } : {}),
       ...(fromDate ? { fromDate, toDate } : {}),
     });
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary-multi?${qs}`);
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/mrs-rr-summary-multi?${qs}`, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "MRS/RR metrics request failed" });
@@ -176,7 +177,7 @@ metrics.get("/apcd-summary", async (req, res) => {
       ...(date ? { date } : {}),
       ...(monthStart ? { monthStart } : {}),
     });
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary?${qs}`);
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary?${qs}`, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "APCD metrics request failed" });
@@ -201,7 +202,7 @@ metrics.get("/apcd-summary-multi", async (req, res) => {
       ...(date ? { date } : {}),
       ...(monthStart ? { monthStart } : {}),
     });
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary-multi?${qs}`);
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/apcd-summary-multi?${qs}`, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "APCD metrics request failed" });
@@ -221,7 +222,7 @@ metrics.get("/iccc-summary", async (req, res) => {
   try {
     const { fromDate, toDate } = req.query;
     const qs = fromDate && toDate ? `?${new URLSearchParams({ fromDate, toDate })}` : "";
-    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/iccc-summary${qs}`);
+    const upstreamRes = await fetch(`${PY_BACKEND_URL}/metrics/iccc-summary${qs}`, { signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS) });
     const data = await upstreamRes.json().catch(() => ({}));
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).json({ message: data?.detail || "ICCC metrics request failed" });
