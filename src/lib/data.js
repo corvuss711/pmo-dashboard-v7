@@ -411,7 +411,7 @@ const BASE_INITIATIVES = [
     ] },
   { key: "iccc", name: "ICCC monitoring of construction sites", ministry: "MOEFCC", owner: "MoEFCC · DPCC / SPCB",
     footNote: "ICCC monitoring is live in Delhi; other states are yet to onboard.",
-    l1: [{ name: "% sites complying with identified interventions", num: 726, den: 1842,
+    l1: [{ name: "% sites complying with identified interventions", noCumulative: true, num: 726, den: 1842,
       formula: "Technically compliant sites (registered, camera & self audit app deployed) ÷ Total sites",
       rationale: "Monitors registered sites that have deployed dust mitigation interventions.",
       agency: "DPCC / SPCB", source: "Available on dust portal", numL: "technically compliant", denL: "total sites",
