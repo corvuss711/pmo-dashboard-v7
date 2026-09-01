@@ -445,8 +445,10 @@ function MetricPeriodBlock({ label, icon: Ico, accent, view, title, loading, pri
         </div>
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: 11, height: 26, minWidth: 0 }}>
-          <span style={{ fontSize: 23, fontWeight: 800, lineHeight: 1, color: view.flag, flex: "none",
-            fontFamily: "'Source Code Pro', monospace" }}>{view.pct}</span>
+          {view.pct !== "N/A" && (
+            <span style={{ fontSize: 23, fontWeight: 800, lineHeight: 1, color: view.flag, flex: "none",
+              fontFamily: "'Source Code Pro', monospace" }}>{view.pct}</span>
+          )}
           <Bar view={view} height={8} />
           <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.mute,
             flex: "none", whiteSpace: "nowrap" }}>{view.frac}</span>
