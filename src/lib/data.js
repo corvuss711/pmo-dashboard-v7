@@ -180,7 +180,7 @@ const BASE_INITIATIVES = [
     stages: [{ n: 1, label: "Design", hint: "Levy design and notification in progress" }],
     metrics: [] },
 
-  { key: "mrs", name: "Mechanized Road Sweeping", ministry: "MOHUA", owner: "MoHUA · ULBs · CAQM",
+  { key: "mrs", name: "Mechanized Road Sweeping", ministry: "MOHUA", owner: "MoHUA · ULBs · CAQM", note: "Roads above 10 m",
     splits: [{ key: "gt10", label: "Above 10 m", mult: 1, perf: 1 }, { key: "lt10", label: "Below 10 m", mult: 1, perf: 1 }],
     footNote: "All MRS metrics are tracked by road width. API feeds to be sought from CAQM.",
     l1: [

@@ -195,9 +195,9 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           if (initiative.key === "scc") ksMonth = applyCaqmOverrides(freshL1(), "scc", "L1", caqmMonthByState?.[r]);
           if (initiative.key === "apcd") ksMonth = applyApcdOverrides(freshL1(), apcdMonthByState?.[r]);
 
-          ks = applyTargets(ks, initiative.key, r, "aggregate");
-          ksMonth = applyTargets(ksMonth, initiative.key, r, "cumulative");
-          l2s = applyTargets(l2s, initiative.key, r, "aggregate");
+          ks = applyTargets(ks, initiative.key, r, "aggregate", activeSegKey);
+          ksMonth = applyTargets(ksMonth, initiative.key, r, "cumulative", activeSegKey);
+          l2s = applyTargets(l2s, initiative.key, r, "aggregate", activeSegKey);
 
           return (
             <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)", overflow: "hidden" }}>

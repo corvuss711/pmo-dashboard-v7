@@ -39,10 +39,12 @@ export const TARGETS = {
   },
   mrs: {
     "% MRS deployed": {
+      segments: ["gt10"],
       aggregate: { "All-Delhi NCR": 405, Delhi: 171, Haryana: 105, Rajasthan: 21, UP: 108 },
       cumulative: { "All-Delhi NCR": 9, Delhi: 2, Haryana: 6, Rajasthan: 1, UP: 0 },
     },
     "% route covered (km)": {
+      segments: ["gt10"],
       percent: true,
       aggregate: { "All-Delhi NCR": 100, Delhi: 100, Haryana: 100, Rajasthan: 100, UP: 100 },
       cumulative: { "All-Delhi NCR": 58, Delhi: 56, Haryana: 71, Rajasthan: 86, UP: 42 },
@@ -61,8 +63,9 @@ export const TARGETS = {
   },
 };
 
-export function targetFor(initiativeKey, metricName, region, period) {
+export function targetFor(initiativeKey, metricName, region, period, seg) {
   const cfg = TARGETS[initiativeKey]?.[metricName];
+  if (cfg?.segments && seg && !cfg.segments.includes(seg)) return null;
   const t = cfg?.[period]?.[region || "All-Delhi NCR"];
   return t == null ? null : { value: t, liveOnly: !!cfg.liveOnly, percent: !!cfg.percent };
 }
@@ -113,6 +116,6 @@ function withTargetAndActual(view, target) {
   };
 }
 
-export function applyTargets(views, initiativeKey, region, period) {
-  return views.map((v) => withTarget(v, targetFor(initiativeKey, v.name, region, period)));
+export function applyTargets(views, initiativeKey, region, period, seg) {
+  return views.map((v) => withTarget(v, targetFor(initiativeKey, v.name, region, period, seg)));
 }

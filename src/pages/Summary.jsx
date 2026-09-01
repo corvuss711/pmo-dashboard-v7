@@ -222,11 +222,15 @@ function StatusStrip({ cards, basis, onBasis }) {
     ? [...c.ks, ...c.l2, ...c.l3]
     : [...c.ksMonth, ...c.l2Month, ...c.l3]));
   const total = metrics.length;
-  const bands = metrics.map((m) => m.raw || 0);
+  const tally = { "On Track": 0, "At Risk": 0, Critical: 0 };
+  for (const m of metrics) {
+    const word = m.status && m.status in tally ? m.status : statusWord(m.raw || 0);
+    tally[word] += 1;
+  }
   const counts = [
-    { word: "On Track", n: bands.filter((b) => b >= 75).length, at: 100 },
-    { word: "At Risk", n: bands.filter((b) => b >= 50 && b < 75).length, at: 60 },
-    { word: "Critical", n: bands.filter((b) => b < 50).length, at: 0 },
+    { word: "On Track", n: tally["On Track"], at: 100 },
+    { word: "At Risk", n: tally["At Risk"], at: 60 },
+    { word: "Critical", n: tally.Critical, at: 0 },
   ];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>

@@ -88,10 +88,10 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
  
-  l1 = applyTargets(l1, initiative.key, region, "aggregate");
-  l1Month = applyTargets(l1Month, initiative.key, region, "cumulative");
-  l2 = applyTargets(l2, initiative.key, region, "aggregate");
-  l2Month = applyTargets(l2Month, initiative.key, region, "cumulative");
+  l1 = applyTargets(l1, initiative.key, region, "aggregate", seg);
+  l1Month = applyTargets(l1Month, initiative.key, region, "cumulative", seg);
+  l2 = applyTargets(l2, initiative.key, region, "aggregate", seg);
+  l2Month = applyTargets(l2Month, initiative.key, region, "cumulative", seg);
 
   const detail = [...l1, ...l2, ...l3].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);
