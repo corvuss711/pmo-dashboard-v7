@@ -207,7 +207,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                     <InfoButton onClick={() => setDetailId(k.id)} />
                   </div>
                   <PeriodRow label="Aggregate" view={k} />
-                  <PeriodRow label="Cumulative" view={km} />
+                  {!k.noCumulative && <PeriodRow label="Cumulative" view={km} />}
                 </div>
               );
             })}
@@ -232,13 +232,9 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           {l2.length ? (
             <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
               {l2.map((m, idx) => {
-                // L2/L3 show a single figure. The one exception is OCEMS's
-                // headline L2 metric, which is tracked per period like an L1.
-                const split = initiative.key === "ocems" && idx === 0;
                 return (
                   <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                    <GridRow m={m} view={m} label={split ? "Aggregate" : null} onDetail={() => setDetailId(m.id)} />
-                    {split && <GridRow m={m} view={l2Month[idx] || m} label="Cumulative" />}
+                    <GridRow m={m} view={m} label={null} onDetail={() => setDetailId(m.id)} />
                   </div>
                 );
               })}

@@ -225,7 +225,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
                       <InfoButton onClick={() => setDetail(k)} />
                     </div>
                     <PeriodBlock label="Aggregate" view={k} />
-                    <PeriodBlock label="Cumulative" view={(ksMonth && ksMonth[kIdx]) || k} />
+                    {!k.noCumulative && <PeriodBlock label="Cumulative" view={(ksMonth && ksMonth[kIdx]) || k} />}
                   </div>
                 ))}
               </div>

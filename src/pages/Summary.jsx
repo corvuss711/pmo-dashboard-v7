@@ -92,11 +92,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       const promoted = extraIdx >= 0 ? l2[extraIdx] : null;
       const extra = promoted ? applyTargets([promoted], i.key, "All-Delhi NCR", "aggregate") : [];
       const extraMonth = promoted ? applyTargets(liveFeed ? zeroActuals([l2Month[extraIdx] || promoted]) : [l2Month[extraIdx] || promoted], i.key, "All-Delhi NCR", "cumulative") : [];
-      // L2 metrics show a single figure; OCEMS's promoted one is the one
-      // exception, tracked per period like an L1.
-      const extraSplit = i.key === "ocems";
-
-      return { i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, extraSplit, cumulativeLoading, monthLoading };
+      return { i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, cumulativeLoading, monthLoading };
   };
   const allCards = VISIBLE_INITIATIVES.map(buildCard);
 
@@ -345,7 +341,7 @@ function MinistryMark({ ministryKey }) {
   );
 }
 
-function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, extraSplit, stacked, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, stacked, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   const Ico = initiativeIcon(i.key);
   const a = initiativeAccent(i.key);
   const rows = [...ks, ...(extra || [])];
@@ -396,7 +392,7 @@ function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, extraSplit,
           return (
             <div key={k.id} style={{ padding: "17px 20px 18px", borderBottom: idx < rows.length - 1 ? `1px solid ${C.line2}` : "none" }}>
               <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key} stacked={stacked}
-                cumulative={idx < ks.length || extraSplit}
+                cumulative={idx < ks.length && !k.noCumulative}
                 cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
             </div>
           );

@@ -30,6 +30,11 @@ export const TARGETS = {
       aggregate: { "All-Delhi NCR": 2121, Delhi: 48, Haryana: 1229, Rajasthan: 244, UP: 600 },
       cumulative: { "All-Delhi NCR": 1060, Delhi: 24, Haryana: 614, Rajasthan: 122, UP: 300 },
     },
+    "% applications rejected": {
+      liveOnly: true,
+      aggregate: { "All-Delhi NCR": 2121, Delhi: 48, Haryana: 1229, Rajasthan: 244, UP: 600 },
+      cumulative: { "All-Delhi NCR": 1060, Delhi: 24, Haryana: 614, Rajasthan: 122, UP: 300 },
+    },
   },
   scc: {
     "% SCCs operationalized": {
