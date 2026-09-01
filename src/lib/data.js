@@ -181,8 +181,7 @@ const BASE_INITIATIVES = [
     metrics: [] },
 
   { key: "mrs", name: "Mechanized Road Sweeping", ministry: "MOHUA", owner: "MoHUA · ULBs · CAQM",
-    splits: [{ key: "all", label: "All road widths", mult: 1, perf: 1 }, { key: "w15", label: "Above 15 m", mult: 0.34, perf: 1.28 },
-      { key: "w10", label: "10–15 m", mult: 0.41, perf: 0.94 }, { key: "w0", label: "Below 10 m", mult: 0.25, perf: 0.52 }],
+    splits: [{ key: "gt10", label: "Above 10 m", mult: 1, perf: 1 }, { key: "lt10", label: "Below 10 m", mult: 1, perf: 1 }],
     footNote: "All MRS metrics are tracked by road width. API feeds to be sought from CAQM.",
     l1: [
       { name: "% MRS deployed", num: 115, den: 194,
