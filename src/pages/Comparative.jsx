@@ -180,6 +180,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           }
           if (initiative.key === "scc") {
             ks = applyCaqmOverrides(ks, "scc", "L1", caqmByState?.[r]);
+            l2s = applyCaqmOverrides(l2s, "scc", "L2", caqmByState?.[r]);
           }
           if (initiative.key === "apcd") {
             ks = applyApcdOverrides(ks, apcdByState?.[r]);

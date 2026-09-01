@@ -1,13 +1,6 @@
 import { flag, track, statusWord, nf } from "./data.js";
 
-// Generic helpers for substituting a live-fetched num/den pair (or an
-// explicit "we don't have this yet") into a static metric-view object,
-// shared by every live data source (currently MRS/Road Repair via CAQM --
-// see caqmLive.js). Not tied to any one source.
 
-// Rebuilds a metric's derived fields (pct/frac/bar/flag/etc, same formula as
-// data.js's metricView) from a live num/den pair, keeping everything else
-// from the static definition (name, formula, rationale, glossary, ...).
 export function withLiveValue(view, liveNum, liveDen) {
   if (liveNum == null || !liveDen) return view;
   const p = Math.round((liveNum / liveDen) * 100);
@@ -15,6 +8,7 @@ export function withLiveValue(view, liveNum, liveDen) {
   return {
     ...view,
     raw: band,
+    num: liveNum,
     den: liveDen,
     pct: p + "%",
     frac: nf(liveNum) + " / " + nf(liveDen),
@@ -27,15 +21,7 @@ export function withLiveValue(view, liveNum, liveDen) {
   };
 }
 
-// Forces an explicit 0/0 result -- used where "we don't have real data for
-// this yet" must render honestly instead of falling back to a static mock
-// number. Unlike withLiveValue, this never returns the original static
-// view: den is forced to 0 unconditionally, so callers don't need to guard
-// against a truthy-but-zero denominator themselves.
-// isLive: true when the metric IS wired to a real upstream field but that
-// field's current value is genuinely 0 (e.g. "0 MRS currently in tender" --
-// a real live reading, not a missing source) -- distinguishes that from a
-// metric with no matching field at all, which stays live: false.
+
 export function withZeroValue(view, isLive = false) {
   return {
     ...view,

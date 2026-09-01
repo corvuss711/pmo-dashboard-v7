@@ -30,6 +30,10 @@ export function cachedJson(url, parse) {
       cache.set(url, { at: Date.now(), value });
       return value;
     })
+    .catch((err) => {
+      if (hit) return hit.value;
+      throw err;
+    })
     .finally(() => inFlight.delete(url));
 
   inFlight.set(url, promise);

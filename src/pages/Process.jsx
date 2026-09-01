@@ -71,7 +71,9 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   if (initiative.key === "scc") {
 
     l1 = applyCaqmOverrides(l1, "scc", "L1", caqmByKey);
+    l2 = applyCaqmOverrides(l2, "scc", "L2", caqmByKey);
     l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), "scc", "L1", caqmMonthByKey);
+    l2Month = applyCaqmOverrides(l2Of(initiative, region, rf, seg), "scc", "L2", caqmMonthByKey);
   }
   if (initiative.key === "apcd") {
 

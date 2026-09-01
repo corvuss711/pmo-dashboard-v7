@@ -19,7 +19,7 @@ export function useApcdSummary(active, region, date, monthStart) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!byKey) setLoading(true);
 
     fetchApcdSummaryMulti(stateIds, undefined, date, monthStart)
       .then((responses) => {
@@ -27,7 +27,8 @@ export function useApcdSummary(active, region, date, monthStart) {
       })
       .catch((err) => {
         console.error("[APCD] apcd-summary fetch failed:", err);
-        if (!cancelled) setByKey(null);
+        // keep whatever is already on screen -- a failed refresh must not
+        // replace real stored data with an empty result
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -52,7 +53,7 @@ export function useApcdSummaryByState(active, monthStart) {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    if (!byState) setLoading(true);
 
     fetchApcdSummaryMulti(Object.values(CPCB_STATE_IDS), undefined, undefined, monthStart)
       .then((responses) => {
@@ -60,7 +61,7 @@ export function useApcdSummaryByState(active, monthStart) {
       })
       .catch((err) => {
         console.error("[APCD] apcd-summary-multi fetch failed:", err);
-        if (!cancelled) setByState(null);
+        // keep whatever is already on screen -- see above
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -13,7 +13,7 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    if (!byKey) setLoading(true);
     const stateIds = region === "All-Delhi NCR" ? Object.values(CAQM_STATE_IDS) : [CAQM_STATE_IDS[region]];
 
     fetchMrsRrSummaryMulti(stateIds, fromDate, toDate)
@@ -22,7 +22,8 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[CAQM] mrs-rr-summary fetch failed:", err);
-        if (!cancelled) setByKey(null);
+        // keep whatever is already on screen -- a failed refresh must not
+        // replace real stored data with an empty result
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -47,7 +48,7 @@ export function useMrsRrSummaryByState(active, fromDate, toDate) {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    if (!byState) setLoading(true);
 
     fetchMrsRrSummaryMulti(Object.values(CAQM_STATE_IDS), fromDate, toDate)
       .then((responses) => {
@@ -55,7 +56,7 @@ export function useMrsRrSummaryByState(active, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[CAQM] mrs-rr-summary-multi fetch failed:", err);
-        if (!cancelled) setByState(null);
+        // keep whatever is already on screen -- see above
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

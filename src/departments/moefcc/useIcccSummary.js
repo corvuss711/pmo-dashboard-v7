@@ -13,7 +13,7 @@ export function useIcccSummary(active, fromDate, toDate) {
       return;
     }
     let cancelled = false;
-    setLoading(true);
+    if (!byKey) setLoading(true);
 
     fetchIcccSummary(fromDate, toDate)
       .then((data) => {
@@ -24,7 +24,8 @@ export function useIcccSummary(active, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[ICCC] iccc-summary fetch failed:", err);
-        if (!cancelled) setByKey(null);
+        // keep whatever is already on screen -- a failed refresh must not
+        // replace real stored data with an empty result
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

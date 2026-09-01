@@ -71,12 +71,12 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       let l2 = l2Of(i, "All-Delhi NCR", rf, null, true);
       let l3 = l3Of(i, "All-Delhi NCR", rf, null, true);
       if (i.key === "apcd") { l2 = applyApcdOverrides(l2, apcdByKey); l3 = applyApcdOverrides(l3, apcdByKey); }
-      if (i.key === "mrs" || i.key === "road") l2 = applyCaqmOverrides(l2, i.key, "L2", caqmByKey);
+      if (i.key === "mrs" || i.key === "road" || i.key === "scc") l2 = applyCaqmOverrides(l2, i.key, "L2", caqmByKey);
       if (i.key === "iccc") l2 = applyIcccOverrides(l2, icccByKey);
 
       let l2Month = l2;
       if (i.key === "apcd") l2Month = applyApcdOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
-      if (i.key === "mrs" || i.key === "road") l2Month = applyCaqmOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), i.key, "L2", caqmMonthByKey);
+      if (i.key === "mrs" || i.key === "road" || i.key === "scc") l2Month = applyCaqmOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), i.key, "L2", caqmMonthByKey);
       if (i.key === "iccc") l2Month = applyIcccOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
 
       // An L2 metric promoted onto the front tile alongside the L1 headline:

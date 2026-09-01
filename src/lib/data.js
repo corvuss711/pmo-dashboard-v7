@@ -537,7 +537,7 @@ export function metricView(def, id, key, region, rf) {
   const has = den > 0;
   if (def.rate) {
     const v = has ? Math.round(num / den) : 0;
-    return { ...def, id, raw: has ? 100 : 0,
+    return { ...def, id, raw: has ? 100 : 0, num, den,
       pct: has ? nf(v) + (def.unit || "") : "\u2014",
       frac: has ? nf(num) + " / " + nf(den) : "no data",
       fracLong: has ? nf(num) + " " + def.numL + " across " + nf(den) + " " + def.denL : "no data in range",
@@ -545,7 +545,7 @@ export function metricView(def, id, key, region, rf) {
   }
   const p = has ? Math.round((num / den) * 100) : 0;
   const band = def.invert ? 100 - p : p;
-  return { ...def, id, raw: band, den,
+  return { ...def, id, raw: band, num, den,
     pct: has ? p + "%" : "\u2014",
     frac: has ? nf(num) + " / " + nf(den) : "no data",
     fracLong: has ? nf(num) + " " + def.numL + " of " + nf(den) + " " + def.denL : "no data in range",
