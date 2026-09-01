@@ -163,7 +163,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           });
 
           const card = (c, fill, stacked) => (
-            <InitiativeCard key={c.i.key} {...c} fill={fill} stacked={stacked}
+            <InitiativeCard key={c.i.key} {...c} fill={fill} stacked={stacked} basis={basis}
               hovered={hoveredCard === c.i.key}
               onHover={() => setHoveredCard(c.i.key)}
               onLeave={() => setHoveredCard(null)}
@@ -341,7 +341,7 @@ function MinistryMark({ ministryKey }) {
   );
 }
 
-function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, stacked, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+function InitiativeCard({ i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, stacked, basis, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
   const Ico = initiativeIcon(i.key);
   const a = initiativeAccent(i.key);
   const rows = [...ks, ...(extra || [])];
@@ -401,7 +401,7 @@ function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, stacked, cu
       {(l2?.length > 0 || l3?.length > 0) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "12px 20px 13px",
           borderTop: `1px solid ${C.line2}`, background: "#FAFAF8" }}>
-          <MetricsRow label="L2 Metrics" items={l2} />
+          <MetricsRow label="L2 Metrics" items={basis === "aggregate" ? l2 : l2Month} />
           <MetricsRow label="L3 Metrics" items={l3} />
         </div>
       )}
