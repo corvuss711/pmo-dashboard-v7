@@ -49,9 +49,12 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
   const { byState: apcdByState, loading: apcdLoading } = useApcdSummaryByState(apcdActive);
 
 
+  // See Process.jsx -- do not fetch or wait on month data a page never shows.
+  const needsMonth = initiative.l1.some((m) => !m.noCumulative);
+
   const thisMonth = defaultRange();
-  const { byState: caqmMonthByState, loading: caqmMonthLoading } = useMrsRrSummaryByState(caqmActive, thisMonth.from, thisMonth.to);
-  const { byState: apcdMonthByState, loading: apcdMonthLoading } = useApcdSummaryByState(apcdActive, thisMonth.from);
+  const { byState: caqmMonthByState, loading: caqmMonthLoading } = useMrsRrSummaryByState(caqmActive && needsMonth, thisMonth.from, thisMonth.to);
+  const { byState: apcdMonthByState, loading: apcdMonthLoading } = useApcdSummaryByState(apcdActive && needsMonth, thisMonth.from);
 
   const liveLoading = caqmActive ? (caqmLoading || caqmMonthLoading)
     : apcdActive ? (apcdLoading || apcdMonthLoading)

@@ -46,10 +46,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
 
+  // Initiatives whose every L1 metric hides the Cumulative row never display
+  // month data, so neither fetch it nor let it gate the loading banner.
+  const needsMonth = initiative.l1.some((m) => !m.noCumulative);
+
   const thisMonth = defaultRange();
-  const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(caqmLiveActive, region, thisMonth.from, thisMonth.to);
-  const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(apcdLiveActive, region, undefined, thisMonth.from);
-  const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(icccLiveActive, thisMonth.from, thisMonth.to);
+  const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(caqmLiveActive && needsMonth, region, thisMonth.from, thisMonth.to);
+  const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(apcdLiveActive && needsMonth, region, undefined, thisMonth.from);
+  const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(icccLiveActive && needsMonth, thisMonth.from, thisMonth.to);
 
 
   const liveLoading = caqmLiveActive ? (caqmLoading || caqmMonthLoading)
