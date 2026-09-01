@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, l3Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
+import { API_INTEGRATED, NAV, REGIONS, l1Of, l2Of, l3Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, SingleDatePicker, DetailDrawer, PinIcon, GRID, SpinnerIcon, LiveBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
@@ -8,6 +8,7 @@ import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { applyTargets } from "../lib/targets.js";
+import { zeroActuals } from "../lib/liveOverrides.js";
 import { AqiWidget } from "../lib/AqiWidget.jsx";
 
 const LayersIcon = (
@@ -90,6 +91,10 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
  
+  if (API_INTEGRATED.has(initiative.key)) {
+    l1Month = zeroActuals(l1Month);
+    l2Month = zeroActuals(l2Month);
+  }
   l1 = applyTargets(l1, initiative.key, region, "aggregate", seg);
   l1Month = applyTargets(l1Month, initiative.key, region, "cumulative", seg);
   l2 = applyTargets(l2, initiative.key, region, "aggregate", seg);

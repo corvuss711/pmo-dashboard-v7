@@ -34,7 +34,7 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
     };
   }, [active, region, fromDate, toDate]);
 
-  return { byKey, loading };
+  return { byKey, loading: loading && !byKey };
 }
 
 export function useMrsRrSummaryByState(active, fromDate, toDate) {
@@ -67,5 +67,5 @@ export function useMrsRrSummaryByState(active, fromDate, toDate) {
     };
   }, [active, fromDate, toDate]);
 
-  return { byState, loading };
+  return { byState, loading: loading && !byState };
 }

@@ -36,5 +36,5 @@ export function useIcccSummary(active, fromDate, toDate) {
     };
   }, [active, fromDate, toDate]);
 
-  return { byKey, loading };
+  return { byKey, loading: loading && !byKey };
 }

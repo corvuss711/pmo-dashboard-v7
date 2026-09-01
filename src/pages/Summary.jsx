@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { VISIBLE_INITIATIVES, MINISTRIES, NAV, l1Of, l2Of, l3Of, flag, track, statusWord, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
+import { VISIBLE_INITIATIVES, API_INTEGRATED, MINISTRIES, NAV, l1Of, l2Of, l3Of, flag, track, statusWord, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { AqiWidget } from "../lib/AqiWidget.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
@@ -9,6 +9,7 @@ import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { applyTargets } from "../lib/targets.js";
+import { zeroActuals } from "../lib/liveOverrides.js";
 import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon, DownloadIcon } from "../lib/icons.jsx";
 
 
@@ -60,6 +61,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
       // Hard-coded targets are authoritative over any upstream denominator,
       // so they are applied last.
+      const liveFeed = API_INTEGRATED.has(i.key);
+      if (liveFeed) ksMonth = zeroActuals(ksMonth);
       ks = applyTargets(ks, i.key, "All-Delhi NCR", "aggregate");
       ksMonth = applyTargets(ksMonth, i.key, "All-Delhi NCR", "cumulative");
 
@@ -79,6 +82,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") l2Month = applyCaqmOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), i.key, "L2", caqmMonthByKey);
       if (i.key === "iccc") l2Month = applyIcccOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
 
+      if (API_INTEGRATED.has(i.key)) l2Month = zeroActuals(l2Month);
+
       // An L2 metric promoted onto the front tile alongside the L1 headline:
       // Parivartan's portal registration, and OCEMS's installation base.
       const extraIdx = i.key.startsWith("parivartan")
@@ -86,7 +91,7 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         : i.key === "ocems" ? 0 : -1;
       const promoted = extraIdx >= 0 ? l2[extraIdx] : null;
       const extra = promoted ? applyTargets([promoted], i.key, "All-Delhi NCR", "aggregate") : [];
-      const extraMonth = promoted ? applyTargets([l2Month[extraIdx] || promoted], i.key, "All-Delhi NCR", "cumulative") : [];
+      const extraMonth = promoted ? applyTargets(liveFeed ? zeroActuals([l2Month[extraIdx] || promoted]) : [l2Month[extraIdx] || promoted], i.key, "All-Delhi NCR", "cumulative") : [];
       // L2 metrics show a single figure; OCEMS's promoted one is the one
       // exception, tracked per period like an L1.
       const extraSplit = i.key === "ocems";

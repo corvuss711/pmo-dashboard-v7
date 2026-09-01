@@ -478,6 +478,8 @@ export const INITIATIVES = BASE_INITIATIVES.flatMap((ini) => {
 });
 
 
+export const API_INTEGRATED = new Set(["mrs", "road", "scc", "iccc", "apcd"]);
+
 export const VISIBLE_INITIATIVES = INITIATIVES.filter((i) => !i.hidden);
 
 export const MINISTRIES = [

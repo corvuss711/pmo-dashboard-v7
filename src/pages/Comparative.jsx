@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
+import { API_INTEGRATED, NAV, REGIONS, l1Of, l2Of, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, Dropdown, DateRange, DetailDrawer, SpinnerIcon, PinIcon, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
 import { useMrsRrSummaryByState } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { useApcdSummaryByState } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { applyTargets } from "../lib/targets.js";
+import { zeroActuals } from "../lib/liveOverrides.js";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -196,6 +197,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           if (initiative.key === "scc") ksMonth = applyCaqmOverrides(freshL1(), "scc", "L1", caqmMonthByState?.[r]);
           if (initiative.key === "apcd") ksMonth = applyApcdOverrides(freshL1(), apcdMonthByState?.[r]);
 
+          if (API_INTEGRATED.has(initiative.key)) ksMonth = zeroActuals(ksMonth);
           ks = applyTargets(ks, initiative.key, r, "aggregate", activeSegKey);
           ksMonth = applyTargets(ksMonth, initiative.key, r, "cumulative", activeSegKey);
           l2s = applyTargets(l2s, initiative.key, r, "aggregate", activeSegKey);

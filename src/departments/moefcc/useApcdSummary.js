@@ -39,7 +39,7 @@ export function useApcdSummary(active, region, date, monthStart) {
     };
   }, [active, region, date, monthStart]);
 
-  return { byKey, loading };
+  return { byKey, loading: loading && !byKey };
 }
 
 export function useApcdSummaryByState(active, monthStart) {
@@ -72,5 +72,5 @@ export function useApcdSummaryByState(active, monthStart) {
     };
   }, [active, monthStart]);
 
-  return { byState, loading };
+  return { byState, loading: loading && !byState };
 }
