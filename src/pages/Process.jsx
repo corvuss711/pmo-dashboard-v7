@@ -7,6 +7,7 @@ import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
+import { applyTargets } from "../lib/targets.js";
 import { AqiWidget } from "../lib/AqiWidget.jsx";
 
 const LayersIcon = (
@@ -119,6 +120,14 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l1Month = applyIcccOverrides(l1Of(initiative, region, rf, seg), icccMonthByKey);
     l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
+  // Hard-coded targets are authoritative over any upstream denominator, so
+  // they are applied last. Same metrics as the Summary tile: the L1 headline
+  // plus any promoted L2 -- applyTargets is a no-op for everything else.
+  l1 = applyTargets(l1, initiative.key, region, "aggregate");
+  l1Month = applyTargets(l1Month, initiative.key, region, "cumulative");
+  l2 = applyTargets(l2, initiative.key, region, "aggregate");
+  l2Month = applyTargets(l2Month, initiative.key, region, "cumulative");
+
   const detail = [...l1, ...l2, ...l3].find((m) => m.id === detailId);
   const curSeg = initiative.splits && (initiative.splits.find((v) => v.key === seg) || initiative.splits[0]);
 

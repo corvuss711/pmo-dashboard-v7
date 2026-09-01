@@ -8,7 +8,8 @@ import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
-import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon } from "../lib/icons.jsx";
+import { applyTargets } from "../lib/targets.js";
+import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon, DownloadIcon } from "../lib/icons.jsx";
 
 /* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
    Clicking a card opens that initiative's process view. */
@@ -80,6 +81,11 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         ksMonth = applyIcccOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
       }
 
+      // Hard-coded targets are authoritative over any upstream denominator,
+      // so they are applied last.
+      ks = applyTargets(ks, i.key, "All-Delhi NCR", "aggregate");
+      ksMonth = applyTargets(ksMonth, i.key, "All-Delhi NCR", "cumulative");
+
       let cumulativeLoading = false, monthLoading = false;
       if (i.key === "apcd") { cumulativeLoading = apcdLoading; monthLoading = apcdMonthLoading; }
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") { cumulativeLoading = caqmLoading; monthLoading = caqmMonthLoading; }
@@ -102,8 +108,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         ? l2.findIndex((x) => x.name === "% registered on portal")
         : i.key === "ocems" ? 0 : -1;
       const promoted = extraIdx >= 0 ? l2[extraIdx] : null;
-      const extra = promoted ? [promoted] : [];
-      const extraMonth = promoted ? [l2Month[extraIdx] || promoted] : [];
+      const extra = promoted ? applyTargets([promoted], i.key, "All-Delhi NCR", "aggregate") : [];
+      const extraMonth = promoted ? applyTargets([l2Month[extraIdx] || promoted], i.key, "All-Delhi NCR", "cumulative") : [];
       // L2 metrics show a single figure; OCEMS's promoted one is the one
       // exception, tracked per period like an L1.
       const extraSplit = i.key === "ocems";
@@ -305,16 +311,23 @@ function DataMenu({ open, onToggle }) {
         <div style={{ position: "absolute", top: 44, right: 0, minWidth: 190, background: "#fff",
           border: `1px solid ${C.line}`, borderRadius: 6, boxShadow: "0 12px 32px rgba(0,0,0,.14)",
           overflow: "hidden", zIndex: 40 }}>
-          {["Upload", "Download"].map((label) => (
-            <div key={label} title="Coming soon"
-              style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 15px", fontSize: 14,
-                color: C.faint, cursor: "not-allowed", background: "#fff" }}>
-              {label}
-              <div style={{ flex: 1 }} />
-              <span style={{ padding: "2px 7px", borderRadius: 999, background: C.paper, border: `1px solid ${C.line2}`,
-                fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase" }}>Soon</span>
-            </div>
-          ))}
+          <div title="Coming soon"
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 15px", fontSize: 14,
+              color: C.faint, cursor: "not-allowed", background: "#fff" }}>
+            Upload
+            <div style={{ flex: 1 }} />
+            <span style={{ padding: "2px 7px", borderRadius: 999, background: C.paper, border: `1px solid ${C.line2}`,
+              fontSize: 10, fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase" }}>Soon</span>
+          </div>
+          <a href={`${import.meta.env.BASE_URL}data-download.xlsx`} download="Data download.xlsx"
+            onClick={onToggle} title="Download the dashboard data workbook (.xlsx)"
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 15px", fontSize: 14,
+              color: C.ink, textDecoration: "none", cursor: "pointer", background: "#fff",
+              borderTop: `1px solid ${C.line2}` }}>
+            Download
+            <div style={{ flex: 1 }} />
+            <span style={{ color: ICON }}><DownloadIcon size={15} strokeWidth={2.4} /></span>
+          </a>
         </div>
       )}
     </div>

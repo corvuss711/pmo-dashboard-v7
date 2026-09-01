@@ -116,6 +116,13 @@ export const CalendarRangeIcon = (p) => (
   </Svg>
 );
 
+export const DownloadIcon = (p) => (
+  <Svg {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <path d="M7 10l5 5 5-5M12 15V3" />
+  </Svg>
+);
+
 export const ShieldIcon = (p) => (
   <Svg {...p}>
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
