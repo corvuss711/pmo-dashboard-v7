@@ -218,7 +218,9 @@ const BASIS_LABELS = {
 };
 
 function StatusStrip({ cards, basis, onBasis }) {
-  const metrics = cards.flatMap((c) => (basis === "aggregate" ? c.l2 : c.l2Month) || []);
+  const metrics = cards.flatMap((c) => (basis === "aggregate"
+    ? [...c.ks, ...c.l2, ...c.l3]
+    : [...c.ksMonth, ...c.l2Month, ...c.l3]));
   const total = metrics.length;
   const bands = metrics.map((m) => m.raw || 0);
   const counts = [
@@ -239,7 +241,7 @@ function StatusStrip({ cards, basis, onBasis }) {
         ))}
       </div>
       {counts.map((c) => (
-        <div key={c.word} title={`${c.word} — ${c.n} of ${total} L2 outcome metrics`}
+        <div key={c.word} title={`${c.word} — ${c.n} of ${total} metrics across L1, L2 and L3`}
           style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 13px", borderRadius: 7,
             background: track(c.at), border: `1px solid ${flag(c.at)}33`, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: flag(c.at), flex: "none" }} />
