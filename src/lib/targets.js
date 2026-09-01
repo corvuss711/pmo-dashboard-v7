@@ -86,7 +86,7 @@ function withTargetOnly(view, target, percent) {
   return {
     ...view, den: percent ? view.den : target, target,
     pct: "N/A",
-    frac: `Target ${fmtTarget(target, percent)}`,
+    frac: `N/A / ${fmtTarget(target, percent)}`,
     fracLong: `No actuals reported yet. Target ${fmtTarget(target, percent)}${!percent && view.denL ? " " + view.denL : ""}`,
     bar: "0%", raw: 0, flag: flag(0), track: track(0), status: statusWord(0),
   };
@@ -98,7 +98,7 @@ function withPercentTarget(view, target) {
   return {
     ...view, target, raw: p,
     pct: actual + "%",
-    frac: `Target ${target}%`,
+    frac: `${actual}% / ${target}%`,
     fracLong: `${actual}% achieved against a ${target}% target`,
     bar: Math.min(100, actual) + "%", flag: flag(p), track: track(p), status: statusWord(p),
   };
