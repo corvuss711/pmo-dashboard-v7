@@ -86,7 +86,7 @@ function withTargetOnly(view, target, percent) {
   return {
     ...view, den: percent ? view.den : target, target,
     pct: "N/A",
-    frac: `N/A / ${fmtTarget(target, percent)}`,
+    frac: `(N/A) / (${fmtTarget(target, percent)})`,
     fracLong: `No actuals reported yet. Target ${fmtTarget(target, percent)}${!percent && view.denL ? " " + view.denL : ""}`,
     bar: "0%", raw: 0, flag: flag(0), track: track(0), status: statusWord(0),
   };
