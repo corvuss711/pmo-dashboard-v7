@@ -26,8 +26,7 @@ function PeriodBlock({ label, view }) {
   );
 }
 
-/* Comparative level: one card per state for a single initiative.
-   Shows L1 metric and all L2 process metrics with segment selection (e.g. Trucks/Buses). */
+
 export default function Comparative({ initiative, onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
@@ -48,10 +47,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
   const apcdActive = initiative.key === "apcd";
   const { byState: apcdByState, loading: apcdLoading } = useApcdSummaryByState(apcdActive);
 
-  // Second, month-scoped pass for the L1 "Cumulative" figure, mirroring what
-  // Summary and Process already show. Same windows as there: Aggregate is the
-  // backend's since-launch snapshot (no dates), Cumulative is 1st-of-month
-  // through today.
+
   const thisMonth = defaultRange();
   const { byState: caqmMonthByState, loading: caqmMonthLoading } = useMrsRrSummaryByState(caqmActive, thisMonth.from, thisMonth.to);
   const { byState: apcdMonthByState, loading: apcdMonthLoading } = useApcdSummaryByState(apcdActive, thisMonth.from);
@@ -190,9 +186,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             l2s = applyApcdOverrides(l2s, apcdByState?.[r]);
           }
 
-          // Month-scoped L1, from a fresh static base so the aggregate pass
-          // above is not mutated. Initiatives with no live source fall back to
-          // the same view, which is an honest 0/0 either way.
+
           let ksMonth = ks;
           const freshL1 = () => l1Of(initiative, r, rf, activeSegKey);
           if (initiative.key === "mrs" || initiative.key === "road") {

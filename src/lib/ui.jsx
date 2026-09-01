@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { REGIONS, l1Of, l2Of, rangeFactor, PRESETS, fmtDate } from "./data.js";
 
-// Closes whichever dropdown is open (identified by the `menu` state holding
-// its key) when a click lands outside every element marked `data-menu-root`.
-// Pages pass their own `menu`/`setMenu` state; works for any number of
-// independent dropdowns (Dropdown, DateRange, or a page's own inline menu)
-// as long as each one's wrapper carries the `data-menu-root` attribute.
+
 export function useCloseMenuOnOutsideClick(menu, setMenu) {
   useEffect(() => {
     if (!menu) return;
@@ -23,9 +19,7 @@ const C = {
   line: "#D4D4CC", line2: "#E2E2DC", paper: "#F6F6F4", bar: "#F3F2EE"
 };
 
-// Small pill marking ONE metric's value as actually fed by a live API right
-// now (vs. the static dataset or an honest 0/0 placeholder). Green -- only
-// for a metric that genuinely computed a real number this time.
+
 export function LiveBadge() {
   return (
     <span style={{
@@ -38,11 +32,7 @@ export function LiveBadge() {
   );
 }
 
-// Tile-level pill marking an INITIATIVE as connected to a live API at all --
-// deliberately a different color/label from LiveBadge, since some of its
-// metrics may still show an honest 0/0 (the upstream just doesn't have that
-// field, not a fetch failure). Blue, "API Integrated" -- never claims every
-// value on the tile is live, only that the tile is wired to a real backend.
+
 export function ApiIntegratedBadge() {
   return (
     <span style={{
@@ -55,11 +45,6 @@ export function ApiIntegratedBadge() {
   );
 }
 
-// Tile-level pill flagging that a tile's live data covers only one state,
-// not the full Delhi NCR region -- currently ICCC (upstream isn't
-// onboarded elsewhere yet, per its footNote in src/lib/data.js). Yellow,
-// matching the app's existing "Watch" status color, since this is a
-// coverage caveat to notice, not a status of the data itself.
 export function DelhiOnlyBadge() {
   return (
     <span style={{
@@ -186,10 +171,7 @@ export function DateRange({ range, setRange, open, onToggle }) {
   );
 }
 
-// Single-date picker -- distinct from DateRange, used only where a specific
-// date genuinely changes what the backend returns (currently: APCD, since
-// its cronDate was confirmed to change the response; MRS/RR's date range
-// does NOT, CAQM ignores it, so DateRange stays cosmetic there).
+
 export function SingleDatePicker({ date, setDate, open, onToggle }) {
   const now = new Date();
   const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");

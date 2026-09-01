@@ -523,7 +523,7 @@ export function regionSlice(def, key, region) {
   return { num: nums[idx], den: Math.max(0, dens[idx]) };
 }
 
-/* ---- derived views -------------------------------------------------- */
+
 
 export function rangeFactor(from, to) {
   const days = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000) + 1);
@@ -532,9 +532,7 @@ export function rangeFactor(from, to) {
 
 export function metricView(def, id, key, region, rf) {
   const sl = region && region !== "All-Delhi NCR" ? regionSlice(def, key, region) : { num: def.num, den: def.den };
-  // noRangeScale: this def's num/den is a real captured API reading, not synthetic demo
-  // data -- applying the date-range "shrink for a narrower window" simulation to it would
-  // fabricate a number that doesn't correspond to anything the real upstream would return.
+  
   const num = def.noRangeScale ? sl.num : Math.round(sl.num * rf);
   const den = sl.den;
   const has = den > 0;
@@ -558,8 +556,7 @@ export function metricView(def, id, key, region, rf) {
     status: statusWord(has ? band : 0) };
 }
 
-/* A segment either selects rows tagged with it, or rescales untagged rows by its
-   share of the base (mult) and its relative performance (perf). */
+
 export function segApply(defs, ini, segKey) {
   if (!ini.splits) return defs;
   const cur = ini.splits.find((v) => v.key === segKey) || ini.splits[0];
@@ -571,14 +568,11 @@ export function segApply(defs, ini, segKey) {
   });
 }
 
-// raw = every segment together, used by the tile levels
+
 export const l1Of = (ini, region, rf, seg, raw) =>
   (raw ? ini.l1 : segApply(ini.l1, ini, seg)).map((d, i) => metricView(d, "L1-" + i, ini.key, region, rf));
 export const l2Of = (ini, region, rf, seg, raw) =>
   (raw ? ini.metrics : segApply(ini.metrics, ini, seg)).map((d, i) => metricView(d, "L2-" + i, ini.key, region, rf));
-// L3: SLA-breach process metrics (e.g. "% approvals pending by X > SLA"), one
-// level more granular than L2. Only Parivartan has these defined so far --
-// initiatives with no `l3` array just get an empty list here.
 export const l3Of = (ini, region, rf, seg, raw) =>
   (raw ? (ini.l3 || []) : segApply(ini.l3 || [], ini, seg)).map((d, i) => metricView(d, "L3-" + i, ini.key, region, rf));
 

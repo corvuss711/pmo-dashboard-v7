@@ -53,11 +53,7 @@ export function withZeroValue(view, isLive = false) {
   };
 }
 
-// Distinct from withZeroValue -- for a metric with NO known data source at
-// all (not "currently 0", genuinely "we don't have this yet"). Shows literal
-// text instead of a numeric 0/0, and uses a neutral gray rather than the
-// red "delay" band, so it reads as "not sourced" rather than "failing".
-// Currently only ICCC's two no-source metrics use this (see icccLive.js).
+
 export function withNoDataMessage(view, message = "Data not provided") {
   return {
     ...view,

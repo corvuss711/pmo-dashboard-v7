@@ -1,17 +1,6 @@
 import React, { useState } from "react";
 import { C } from "./ui.jsx";
 
-/* Header AQI widget + its modal. No live PM2.5/AQI source is integrated yet
-   -- the numbers below are an explicit DUMMY/demo dataset (deterministic,
-   generated once at module load, not randomized per render), shown at the
-   user's request so the design reads exactly like the target mockup while
-   a real source is pending. This is the same lifecycle every other metric
-   in this app went through (static demo numbers first, replaced by a real
-   department integration later -- see MRS/RR, APCD, ICCC) -- NOT the same
-   as claiming this is live data. Swap DUMMY_* below for a real fetch when
-   an AQI/PM2.5 API is integrated; nothing else needs to change shape-wise.
-   The one genuinely real thing here is the AQI/PM2.5 category ranges table
-   -- those are CPCB's own published NAAQS thresholds, not demo data. */
 
 const REGIONS_AQI = ["All-Delhi NCR", "Delhi", "UP", "Rajasthan", "Haryana"];
 const RANGES_AQI = ["Last 30 days", "Last 90 days", "FY to date", "Since launch"];
@@ -25,10 +14,6 @@ const AQI_CATEGORIES = [
   { label: "Worst (Severe)", aqi: "AQI 401–500+", pm: "PM2.5: ≥ 251 µg/m³", color: "#7A1F2B", bg: "#F3DCDF" },
 ];
 
-// -----------------------------------------------------------------------
-// Dummy dataset -- deterministic (seeded PRNG), computed once at module
-// load. 191 days, 2 Feb – 11 Aug, matching the mockup's stat cards exactly.
-// -----------------------------------------------------------------------
 
 function seededRandom(seed) {
   let s = seed;
@@ -41,11 +26,7 @@ function seededRandom(seed) {
 const DAY_COUNT = 191;
 const rand = seededRandom(42);
 
-// PM2.5 (µg/m³) points -- naturally ranges ~48-117, comfortably under the
-// chart's 0-130 y-scale. "Peak AQI Recorded" below is a separate stat on
-// the AQI index scale (not µg/m³), not a literal point on this chart --
-// same distinction the mockup itself draws (chart y-axis tops out at 120,
-// the peak-AQI stat is a different, higher-scale number).
+
 const DUMMY_DAILY = Array.from({ length: DAY_COUNT }, (_, t) => {
   const base = 58 + 45 * Math.exp(-t / 55) + 14 * Math.sin(t / 11) * Math.exp(-t / 130);
   const noise = (rand() - 0.5) * 22;
@@ -85,10 +66,7 @@ const DUMMY_BREAKDOWN = [
 
 const X_AXIS_LABELS = ["2 Feb", "26 Feb", "22 Mar", "15 Apr", "9 May", "2 Jun", "26 Jun", "20 Jul"];
 
-// Header pill -- display only for now (not clickable, modal disabled per
-// request 2026-08-21; AqiModal below is kept intact, just not wired up, so
-// re-enabling later is a one-line change in Summary.jsx/Process.jsx).
-// Dummy "live-looking" reading, same caveat as the module docstring above.
+
 export function AqiWidget() {
   const sparkline = DUMMY_TREND30.filter((_, i) => i % 8 === 0).slice(-8);
   const min = Math.min(...sparkline), max = Math.max(...sparkline);

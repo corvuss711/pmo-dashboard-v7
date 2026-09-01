@@ -11,8 +11,7 @@ import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { applyTargets } from "../lib/targets.js";
 import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon, DownloadIcon } from "../lib/icons.jsx";
 
-/* Consolidated Delhi NCR summary: one card per initiative, grouped by ministry.
-   Clicking a card opens that initiative's process view. */
+
 export default function Summary({ onNavigate, onLogout, loggingOut }) {
   const [range, setRange] = useState(loadPersistedRange);
   const [menu, setMenu] = useState(null);
@@ -24,27 +23,15 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
   const rf = rangeFactor(range.from, range.to).factor;
 
-  // Live APCD data for the "CEMS and APCD for industries" card (NCR-wide
-  // aggregate, same as this page's other cards). Always active -- this
-  // page has no region/segment selector to gate on.
+
   const { byKey: apcdByKey, loading: apcdLoading } = useApcdSummary(true, "All-Delhi NCR");
 
-  // Live CAQM data for MRS/Road Repair (cumulative -- no args, backend's
-  // "since launch" standard window). Always active here (unlike Process.jsx,
-  // which gates on the road-width segment) -- this page's L1 cards use
-  // l1Of's raw=true path (ini.l1 unfiltered by segApply), matching CAQM's
-  // "all widths combined" response.
   const { byKey: caqmByKey, loading: caqmLoading } = useMrsRrSummary(true, "All-Delhi NCR");
 
-  // Live ICCC data. Always active -- this page only ever shows the
-  // NCR-wide combined view, which is the only view ICCC's upstream has.
+  
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(true);
 
-  // "This Month" bars: a fixed 1st-of-current-month through today window,
-  // independent of the page's own (hidden) DateRange state. APCD's
-  // cronDate snapshots are cumulative-as-of-date, so its "this month" is a
-  // DELTA (see moefcc.py's get_delta_since). CAQM and ICCC both now take a
-  // genuine fromDate/toDate range.
+
   const thisMonth = defaultRange();
   const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(true, "All-Delhi NCR", undefined, thisMonth.from);
   const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(true, thisMonth.from, thisMonth.to);
@@ -52,24 +39,14 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
   const buildCard = (i) => {
       let ks = l1Of(i, "All-Delhi NCR", rf, null, true);
-      // "apcd" segment items get live data; "ocems" items on the same
-      // card pass through untouched (no live source yet).
+   
       if (i.key === "apcd") ks = applyApcdOverrides(ks, apcdByKey);
-      // Unconditional -- MRS/Road Repair must never fall back to the
-      // static dataset. Both of MRS's L1 tiles ("% MRS deployed",
-      // "% route covered") have no matching CAQM rule (confirmed
-      // against the actual API builder's own cannot-compute list),
-      // so applyCaqmOverrides forces an honest 0/0 for them here too.
+     
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") ks = applyCaqmOverrides(ks, i.key, "L1", caqmByKey);
-      // ICCC's single L1 tile: 3 of 5 metrics are live, but this one
-      // ("% sites complying with identified interventions") is
-      // computable -- applyIcccOverrides handles the no-source ones
-      // internally too, so this is safe even for the ones that aren't.
+    
       if (i.key === "iccc") ks = applyIcccOverrides(ks, icccByKey);
 
-      // "This Month" variant. Defaults to mirroring `ks` (static defs
-      // stay an honest 0/0 either way). CEMS, MRS/RR and ICCC each
-      // get a fresh static base + a month-scoped override.
+
       let ksMonth = ks;
       if (i.key === "apcd") {
         ksMonth = applyApcdOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), apcdMonthByKey);
@@ -176,15 +153,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
           const cards = allCards.filter((c) => c.i.ministry === m.key);
           const big = cards.filter((c) => c.ks.length > 1);
           const small = cards.filter((c) => c.ks.length === 1);
-          // One multi-metric card paired with one or two single-metric cards: put the
-          // multi-metric card alone on the left, stack the rest on the right to match its height.
-          // With more cards than that (e.g. 4), a plain grid reads better than a lopsided stack.
           const splitLayout = big.length === 1 && small.length >= 1 && small.length <= 2 && big.length + small.length === cards.length;
 
-          // Each row of the 2-up grid sizes to its taller card, so only a card
-          // whose row-mate has MORE metric rows ends up padded with white
-          // space. That one stacks its period blocks to fill the height;
-          // cards paired with an equally short sibling stay side by side.
           const rowsOf = (c) => c.ks.length + (c.extra?.length || 0);
           const stackedFlags = cards.map((c, idx) => {
             const mate = cards[idx % 2 === 0 ? idx + 1 : idx - 1];
@@ -211,9 +181,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
                 <div style={{ flex: 1, height: 1, background: C.line2 }} />
               </div>
               {cards.length === 1 ? (
-                // A lone card in its section (e.g. MORTH once Green
-                // Contribution is hidden below) stretches to the section's
-                // full width instead of sitting stuck in a 2-col grid slot.
                 <div style={{ display: "grid", gridTemplateColumns: "1fr" }}>{card(cards[0], false)}</div>
               ) : splitLayout ? (
                 <div style={{ display: "flex", gap: 20, alignItems: "stretch" }}>
@@ -236,14 +203,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
     </div>
   );
 }
-
-// Tile-level "API Integrated" badge shown once per card. Distinct from the
-// per-metric LiveBadge on purpose: a tile can be wired to a real backend
-// while some of its metrics still honestly show 0/0 (the upstream just has
-// no field for that one) -- "API Integrated" only claims the tile is
-// connected, not that every value on it is currently live. "ocems" is
-// absent because OCEMS has no live source yet (a separate, deferred
-// integration); it only shares this badge's ministry, not its feed.
 const API_INTEGRATED_INITIATIVES = new Set(["mrs", "road", "iccc", "scc", "apcd"]);
 
 const ICON = "#0B4A5A";
@@ -395,11 +354,7 @@ function InitiativeCard({ i, ks, ksMonth, l2, l3, extra, extraMonth, extraSplit,
         transform: hovered ? "translateY(-2px)" : "none",
         transition: "all 0.16s ease",
         overflow: "hidden",
-        // "row": equal-width column in a horizontal split (needs flex-basis 0 so both
-        //   sides split space evenly regardless of content).
-        // "col": stacked card in a vertical split — flex-basis "auto" starts from its own
-        //   natural content height and only grows into leftover space, so it never gets
-        //   squeezed thinner than its content (which would clip the progress bar).
+
         ...(fill === "row" ? { flex: "1 1 0", minWidth: 0 } : null),
         ...(fill === "col" ? { flex: "1 1 auto", minWidth: 0 } : null)
       }}>

@@ -6,11 +6,7 @@ import Login from "./pages/Login.jsx";
 import { INITIATIVES, REGIONS } from "./lib/data.js";
 import { apiUrl } from "./lib/api.js";
 
-/* Routes live in the hash so browser Back and refresh both work:
-   #summary                        initiative tiles
-   #<initiative>                   process view at Delhi NCR level
-   #<initiative>/<state>           process view for one state
-   #<initiative>/comparative       one card per state */
+
 function parseHash() {
   const raw = decodeURIComponent((window.location.hash || "").replace(/^#/, ""));
   const [screen, level] = raw.split("/");

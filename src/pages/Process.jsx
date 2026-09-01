@@ -16,10 +16,7 @@ const LayersIcon = (
   </svg>
 );
 
-/* Full-page process view: L1 cards pinned across the top, the complete L2 list
-   below, metric definitions in a drawer. Region "comparative" is the state tiles. */
-// Local calendar date (not toISOString, which shifts to UTC and can land on
-// the wrong day) -- used as the APCD single-date picker's default.
+
 function todayISO() {
   const now = new Date();
   return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
@@ -36,45 +33,24 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
 
   const rf = rangeFactor(range.from, range.to).factor;
 
-  // Live CAQM data for MRS/Road Repair. MRS's L1/L2 items are untagged and get
-  // rescaled by road-width segment (segApply) -- CAQM's response isn't
-  // width-segmented, so only apply live data on the default "all widths" segment.
+
   const caqmLiveActive = initiative.key === "road" || initiative.key === "scc" || (initiative.key === "mrs" && (!seg || seg === initiative.splits[0].key));
-  // No fromDate/toDate -- the date picker is hidden app-wide right now, so
-  // the persisted range isn't a window CAQM has necessarily been queried
-  // for; omitting both serves the cached "widest window" instead of
-  // triggering an on-demand fetch for an arbitrary range.
+
   const { byKey: caqmByKey, loading: caqmLoading } = useMrsRrSummary(caqmLiveActive, region);
 
-  // Live APCD data (MoEFCC "cems" tile). Only the "apcd" segment has a live
-  // source -- fetch regardless of which segment is selected (applyApcdOverrides
-  // itself only touches seg === "apcd" items, leaving "ocems" on the static
-  // dataset untouched either way). Unlike CAQM's range, apcdDate is a real
-  // lookup -- CPCB's cronDate genuinely changes the data returned.
+
   const apcdLiveActive = initiative.key === "apcd";
   const { byKey: apcdByKey, loading: apcdLoading } = useApcdSummary(apcdLiveActive, region, apcdDate);
 
-  // Live ICCC data (Delhi dust control portal). No per-state breakdown at
-  // all upstream -- only fetch when viewing Delhi/All-Delhi NCR (ICCC isn't
-  // onboarded elsewhere yet). No fromDate/toDate -- same reasoning as CAQM
-  // above: the date picker is hidden app-wide, so the persisted range isn't
-  // a window ICCC has necessarily been queried for. Omitting both serves
-  // the cron's cached standard window (DB-only) instead of risking an
-  // on-demand live fetch for an arbitrary range on every reload.
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
 
-  // "Cumulative" column (renamed from "This Month", same fixed 1st-of-month
-  // through today window as Summary.jsx) -- region/segment-aware, unlike
-  // Summary which is always NCR-wide.
   const thisMonth = defaultRange();
   const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(caqmLiveActive, region, thisMonth.from, thisMonth.to);
   const { byKey: apcdMonthByKey, loading: apcdMonthLoading } = useApcdSummary(apcdLiveActive, region, undefined, thisMonth.from);
   const { byKey: icccMonthByKey, loading: icccMonthLoading } = useIcccSummary(icccLiveActive, thisMonth.from, thisMonth.to);
 
-  // Only one live source is ever active per initiative view -- collapse to
-  // a single flag so L1/L2/L3 sections can show one "fetching live data"
-  // note instead of a stale-looking 0/0 while a request is in flight.
+
   const liveLoading = caqmLiveActive ? (caqmLoading || caqmMonthLoading)
     : apcdLiveActive ? (apcdLoading || apcdMonthLoading)
     : icccLiveActive ? (icccLoading || icccMonthLoading)
@@ -83,46 +59,35 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   let l1 = l1Of(initiative, region, rf, seg);
   let l2 = l2Of(initiative, region, rf, seg);
   let l3 = l3Of(initiative, region, rf, seg);
-  // "Cumulative" variant. Defaults to mirroring l1/l2 (static defs stay an
-  // honest 0/0 either way; L3 has no live source anywhere yet).
+
   let l1Month = l1, l2Month = l2;
   if (initiative.key === "mrs" || initiative.key === "road") {
-    // Unconditional -- MRS/Road Repair must never fall back to the static
-    // dataset, including while caqmByKey hasn't loaded yet (e.g. a
-    // road-width segment other than "all", where no fetch even runs) --
-    // applyCaqmOverrides forces an honest 0/0 there.
+
     l1 = applyCaqmOverrides(l1, initiative.key, "L1", caqmByKey);
     l2 = applyCaqmOverrides(l2, initiative.key, "L2", caqmByKey);
     l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), initiative.key, "L1", caqmMonthByKey);
     l2Month = applyCaqmOverrides(l2Of(initiative, region, rf, seg), initiative.key, "L2", caqmMonthByKey);
   }
   if (initiative.key === "scc") {
-    // Only L1 ("% SCCs operationalized") has a matching CAQM field
-    // (sccs_operationalized) -- L2's 4 stages stay static.
+
     l1 = applyCaqmOverrides(l1, "scc", "L1", caqmByKey);
     l1Month = applyCaqmOverrides(l1Of(initiative, region, rf, seg), "scc", "L1", caqmMonthByKey);
   }
   if (initiative.key === "apcd") {
-    // Same unconditional rule -- the "apcd" segment must never fall back to
-    // the static dataset. "ocems" items pass through applyApcdOverrides
-    // untouched (no live source yet).
+
     l1 = applyApcdOverrides(l1, apcdByKey);
     l2 = applyApcdOverrides(l2, apcdByKey);
     l1Month = applyApcdOverrides(l1Of(initiative, region, rf, seg), apcdMonthByKey);
     l2Month = applyApcdOverrides(l2Of(initiative, region, rf, seg), apcdMonthByKey);
   }
   if (initiative.key === "iccc") {
-    // Unconditional too -- the 3 computable ICCC metrics never fall back to
-    // static, and the 2 no-source metrics always show "Data not provided"
-    // regardless of region/fetch state (see applyIcccOverrides).
+  
     l1 = applyIcccOverrides(l1, icccByKey);
     l2 = applyIcccOverrides(l2, icccByKey);
     l1Month = applyIcccOverrides(l1Of(initiative, region, rf, seg), icccMonthByKey);
     l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
-  // Hard-coded targets are authoritative over any upstream denominator, so
-  // they are applied last. Same metrics as the Summary tile: the L1 headline
-  // plus any promoted L2 -- applyTargets is a no-op for everything else.
+ 
   l1 = applyTargets(l1, initiative.key, region, "aggregate");
   l1Month = applyTargets(l1Month, initiative.key, region, "cumulative");
   l2 = applyTargets(l2, initiative.key, region, "aggregate");
@@ -167,10 +132,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                     <button key={n.key} type="button"
                       onClick={() => {
                         setMenu(null); setDetailId(null); setSeg(null);
-                        // ICCC has no region picker (hidden -- see below) and
-                        // no live source outside Delhi -- switching into it
-                        // from a non-Delhi region would otherwise strand the
-                        // user on all-zero data with no UI to fix it.
+                        
                         onNavigate(n.key, n.key === "iccc" ? "All-Delhi NCR" : region);
                       }}
                       style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 15px", border: 0,
@@ -192,10 +154,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                 }))} />
             )}
             {initiative.key !== "iccc" && (
-              // ICCC has no per-state breakdown at all and isn't onboarded
-              // outside Delhi (see icccLiveActive above) -- a region picker
-              // here would let someone "select" a state with no real data,
-              // so it's hidden entirely rather than just defaulting oddly.
+             
               <Dropdown label={region === "All-Delhi NCR" ? "Delhi NCR" : region} icon={PinIcon} open={menu === "region"}
                 onToggle={() => setMenu(menu === "region" ? null : "region")}
                 options={["Delhi NCR", "Comparative", ...REGIONS].map((r) => ({
@@ -332,7 +291,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   );
 }
 
-// L1 card's per-period line (Aggregate / Cumulative).
+
 function PeriodRow({ label, view }) {
   return (
     <div style={{ marginTop: 8 }}>
@@ -346,9 +305,6 @@ function PeriodRow({ label, view }) {
   );
 }
 
-// L2/L3 grid row's per-period line. `m` carries name/stageLabel/live (shown
-// only on the "Aggregate" row); `view` carries the period-specific
-// pct/frac/flag/live. onDetail present only on the primary row.
 function GridRow({ m, view, label, onDetail }) {
   return (
     <div data-row style={{ display: "grid", gridTemplateColumns: GRID, alignItems: "center", gap: 18, padding: !onDetail ? "3px 15px 9px" : label ? "9px 15px 3px" : "11px 15px 12px" }}>

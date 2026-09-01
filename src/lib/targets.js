@@ -77,8 +77,6 @@ function withTargetAndActual(view, target) {
   };
 }
 
-// Applies the hard-coded targets to a list of metric views for one
-// initiative/region/period. Metrics with no target configured pass through.
 export function applyTargets(views, initiativeKey, region, period) {
   return views.map((v) => withTarget(v, targetFor(initiativeKey, v.name, region, period)));
 }

@@ -11,7 +11,6 @@ const UPSTREAM_BASE = process.env.UPSTREAM_BASE_URL || "http://74.225.180.0/pmo_
 const COOKIE_NAME = "phase3_auth_token"; // namespaced so it can't collide with another app's cookie on the same host
 const isProd = process.env.NODE_ENV === "production";
 // The site is served over plain HTTP (http://20.219.138.129/phase3), so `secure: true` would make
-// the browser silently refuse to store the cookie. Only flip this on once the site is behind HTTPS.
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
 const app = express();
@@ -27,8 +26,6 @@ const authCookieOptions = {
   maxAge: 1000 * 60 * 60 * 12, // 12h
 };
 
-// Every future authenticated upstream call should read req.cookies[COOKIE_NAME]
-// and send it upstream as `Authorization: Bearer <token>`, the same way /api/logout does below.
 
 const api = express.Router();
 
@@ -90,22 +87,14 @@ api.post("/logout", async (req, res) => {
   }
 });
 
-// Lets the client know whether the http-only auth cookie is present (e.g. after a page refresh),
-// without ever exposing the token value itself to JS.
+
 api.get("/me", (req, res) => {
   res.json({ authenticated: Boolean(req.cookies?.[COOKIE_NAME]) });
 });
 
-// ---------------------------------------------------------------------------
-// pmo-dashboard-phase-3-backend proxy (Python, deployed on its own server).
-// OCEMS integration removed pending a redesigned flow -- re-add its own
-// proxy block here (session cookies, /ocems/* routes) once that lands, with
-// its own DB persistence per the department-per-file backend architecture.
 const PY_BACKEND_URL = process.env.PY_BACKEND_URL || "http://74.225.180.0:8011";
 const BACKEND_TIMEOUT_MS = Number(process.env.BACKEND_TIMEOUT_MS || 12000);
 
-// CAQM (MRS + Road Repair): no session/cookie involved -- CAQM's upstream
-// needs no auth, so this is a plain passthrough.
 const metrics = express.Router();
 
 metrics.get("/mrs-rr-summary", async (req, res) => {
@@ -134,8 +123,6 @@ metrics.get("/mrs-rr-summary", async (req, res) => {
   }
 });
 
-// Batched variant -- 1 request for several states instead of 4 (see
-// app/departments/mohua.py's mrs_rr_summary_multi docstring).
 metrics.get("/mrs-rr-summary-multi", async (req, res) => {
   const { stateIds, cityId, fromDate, toDate } = req.query;
   if (!stateIds) {
@@ -162,9 +149,6 @@ metrics.get("/mrs-rr-summary-multi", async (req, res) => {
   }
 });
 
-// APCD (MoEFCC/CPCB): no session/cookie involved here either -- the APCD
-// portal's client_id/secret auth happens only inside the daily cron on the
-// Python backend, never in this browser-facing proxy.
 metrics.get("/apcd-summary", async (req, res) => {
   const { stateId, cityId, date, monthStart } = req.query;
   if (!stateId) {
@@ -214,10 +198,6 @@ metrics.get("/apcd-summary-multi", async (req, res) => {
   }
 });
 
-// ICCC (MoEFCC/Delhi dust control): no params at all -- the upstream has no
-// per-state breakdown and no date-range capability. DB-only read, same as
-// apcd-summary -- the Python backend's cron is the only thing that ever
-// calls the ICCC API directly.
 metrics.get("/iccc-summary", async (req, res) => {
   try {
     const { fromDate, toDate } = req.query;
@@ -234,15 +214,12 @@ metrics.get("/iccc-summary", async (req, res) => {
   }
 });
 
-// Answers both unprefixed (dev, or a plain proxy_pass with no rewrite) and /phase3-prefixed
-// (prod behind Nginx at the /phase3 path) requests with the same routes.
+
 app.use("/api", api);
 app.use("/phase3/api", api);
 app.use("/api/metrics", metrics);
 app.use("/phase3/api/metrics", metrics);
 
-// Optional fallback: only relevant if Node serves the built frontend itself instead of Nginx
-// serving it from /var/www — the recommended production setup does the latter.
 if (isProd) {
   const distDir = path.join(__dirname, "..", "dist");
   app.use("/phase3", express.static(distDir));
