@@ -23,16 +23,14 @@ export function withLiveValue(view, liveNum, liveDen) {
 
 
 export function withZeroValue(view, isLive = false) {
-  // Preserve the denominator if it exists from cumulative targets
-  const den = view.den > 0 ? view.den : 0;
   return {
     ...view,
     raw: 0,
     num: 0,
-    den: den,
+    den: 0,
     pct: "0%",
-    frac: nf(0) + " / " + nf(den),
-    fracLong: nf(0) + " " + view.numL + " of " + nf(den) + " " + view.denL,
+    frac: nf(0) + " / " + nf(0),
+    fracLong: nf(0) + " " + view.numL + " of " + nf(0) + " " + view.denL,
     bar: "0%",
     flag: flag(0),
     track: track(0),
