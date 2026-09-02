@@ -219,9 +219,16 @@ const BASIS_LABELS = {
 };
 
 function StatusStrip({ cards, basis, onBasis }) {
+  // Aggregate has no hidden metrics -- every L1/L2/L3 shows an Aggregate
+  // figure or dot. Cumulative is different: only a handful of L1 metrics
+  // still carry a real month target (see targets.js) -- L2/L3 dropped their
+  // Cumulative row entirely, and noCumulative marks the L1s (APCD, OCEMS,
+  // ICCC) with no month target at all. Counting those as if they had a
+  // visible Cumulative reading is what produced the "74/74" mismatch --
+  // this only tallies what the toggle can actually show.
   const metrics = cards.flatMap((c) => (basis === "aggregate"
     ? [...c.ks, ...c.l2, ...c.l3]
-    : [...c.ksMonth, ...c.l2Month, ...c.l3]));
+    : c.ksMonth.filter((m) => !m.noCumulative)));
   const total = metrics.length;
   const tally = { "On Track": 0, "At Risk": 0, Critical: 0 };
   for (const m of metrics) {
@@ -246,7 +253,9 @@ function StatusStrip({ cards, basis, onBasis }) {
         ))}
       </div>
       {counts.map((c) => (
-        <div key={c.word} title={`${c.word} — ${c.n} of ${total} metrics across L1, L2 and L3`}
+        <div key={c.word} title={basis === "aggregate"
+          ? `${c.word} — ${c.n} of ${total} metrics across L1, L2 and L3`
+          : `${c.word} — ${c.n} of ${total} L1 metrics with a Cumulative target`}
           style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 13px", borderRadius: 7,
             background: track(c.at), border: `1px solid ${flag(c.at)}33`, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: flag(c.at), flex: "none" }} />
