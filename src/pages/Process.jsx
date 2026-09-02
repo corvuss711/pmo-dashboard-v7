@@ -46,9 +46,13 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
 
-  // Initiatives whose every L1 metric hides the Cumulative row never display
-  // month data, so neither fetch it nor let it gate the loading banner.
-  const needsMonth = initiative.l1.some((m) => !m.noCumulative);
+  // Initiatives whose every L1 metric hides the Cumulative row, AND have no
+  // L2 metric flagged showCumulative, never display month data -- neither
+  // fetch it nor let it gate the loading banner. (APCD's L1 hides
+  // Cumulative, but its "% installation applications approved" L2 metric
+  // does not -- checking l1 alone starved that row of live month data.)
+  const needsMonth = initiative.l1.some((m) => !m.noCumulative)
+    || initiative.metrics.some((m) => m.showCumulative);
 
   const thisMonth = defaultRange();
   const { byKey: caqmMonthByKey, loading: caqmMonthLoading } = useMrsRrSummary(caqmLiveActive && needsMonth, region, thisMonth.from, thisMonth.to);

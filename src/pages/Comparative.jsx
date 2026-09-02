@@ -50,7 +50,9 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
 
 
   // See Process.jsx -- do not fetch or wait on month data a page never shows.
-  const needsMonth = initiative.l1.some((m) => !m.noCumulative);
+  // See Process.jsx's needsMonth for why l1 alone is not sufficient.
+  const needsMonth = initiative.l1.some((m) => !m.noCumulative)
+    || initiative.metrics.some((m) => m.showCumulative);
 
   const thisMonth = defaultRange();
   const { byState: caqmMonthByState, loading: caqmMonthLoading } = useMrsRrSummaryByState(caqmActive && needsMonth, thisMonth.from, thisMonth.to);
