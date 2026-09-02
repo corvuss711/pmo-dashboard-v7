@@ -236,9 +236,11 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
           {l2.length ? (
             <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, overflow: "hidden" }}>
               {l2.map((m, idx) => {
+                const split = m.showCumulative;
                 return (
                   <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
-                    <GridRow m={m} view={m} label={null} onDetail={() => setDetailId(m.id)} />
+                    <GridRow m={m} view={m} label={split ? "Aggregate" : null} onDetail={() => setDetailId(m.id)} />
+                    {split && <GridRow m={m} view={l2Month[idx] || m} label="Cumulative" />}
                   </div>
                 );
               })}

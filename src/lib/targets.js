@@ -5,7 +5,7 @@ export const TARGETS = {
   "parivartan-trucks": {
     "% of pre-BS VI vehicles converted (Trucks)": {
       aggregate: { "All-Delhi NCR": 191239, Delhi: 63795, Haryana: 87554, Rajasthan: 6997, UP: 32893 },
-      cumulative: { "All-Delhi NCR": 5738, Delhi: 1914, Haryana: 2627, Rajasthan: 210, UP: 987 },
+      cumulative: { "All-Delhi NCR": 9563, Delhi: 3190, Haryana: 4378, Rajasthan: 350, UP: 1645 },
     },
     "% registered on portal": {
       aggregate: { "All-Delhi NCR": 191239, Delhi: 63795, Haryana: 87554, Rajasthan: 6997, UP: 32893 },
@@ -14,7 +14,7 @@ export const TARGETS = {
   "parivartan-buses": {
     "% of pre-BS VI vehicles converted (Buses)": {
       aggregate: { "All-Delhi NCR": 16329, Delhi: 11, Haryana: 10619, Rajasthan: 1538, UP: 4161 },
-      cumulative: { "All-Delhi NCR": 490, Delhi: 0, Haryana: 319, Rajasthan: 46, UP: 125 },
+      cumulative: { "All-Delhi NCR": 816, Delhi: 0, Haryana: 531, Rajasthan: 77, UP: 208 },
     },
     "% registered on portal": {
       aggregate: { "All-Delhi NCR": 16329, Delhi: 11, Haryana: 10619, Rajasthan: 1538, UP: 4161 },
@@ -28,7 +28,9 @@ export const TARGETS = {
     "% installation applications approved (post SAC and SPCB)": {
       liveOnly: true,
       aggregate: { "All-Delhi NCR": 2121, Delhi: 48, Haryana: 1229, Rajasthan: 244, UP: 600 },
-      cumulative: { "All-Delhi NCR": 1060, Delhi: 24, Haryana: 614, Rajasthan: 122, UP: 300 },
+      // NCR total is the sheet's own Cumulative-column figure, not the sum of
+      // the four state targets below (24+614+122+300=1060) -- taken as given.
+      cumulative: { "All-Delhi NCR": 3181, Delhi: 24, Haryana: 614, Rajasthan: 122, UP: 300 },
     },
     "% applications rejected": {
       liveOnly: true,
@@ -39,14 +41,14 @@ export const TARGETS = {
   scc: {
     "% SCCs operationalized": {
       aggregate: { "All-Delhi NCR": 155, Delhi: 59, Haryana: 52, Rajasthan: 7, UP: 37 },
-      cumulative: { "All-Delhi NCR": 16, Delhi: 0, Haryana: 11, Rajasthan: 0, UP: 5 },
+      cumulative: { "All-Delhi NCR": 96, Delhi: 0, Haryana: 34, Rajasthan: 30, UP: 32 },
     },
   },
   mrs: {
     "% MRS deployed": {
       segments: ["gt10"],
       aggregate: { "All-Delhi NCR": 405, Delhi: 171, Haryana: 105, Rajasthan: 21, UP: 108 },
-      cumulative: { "All-Delhi NCR": 9, Delhi: 2, Haryana: 6, Rajasthan: 1, UP: 0 },
+      cumulative: { "All-Delhi NCR": 256, Delhi: 102, Haryana: 75, Rajasthan: 32, UP: 47 },
     },
     "% route covered (km)": {
       segments: ["gt10"],
@@ -58,7 +60,7 @@ export const TARGETS = {
   road: {
     "% roads with redevelopment completed": {
       aggregate: { "All-Delhi NCR": 6857, Delhi: 3065, Haryana: 1693, Rajasthan: 307, UP: 1792 },
-      cumulative: { "All-Delhi NCR": 1254, Delhi: 613, Haryana: 233, Rajasthan: 50, UP: 358 },
+      cumulative: { "All-Delhi NCR": 2508, Delhi: 1226, Haryana: 466, Rajasthan: 100, UP: 716 },
     },
   },
   iccc: {

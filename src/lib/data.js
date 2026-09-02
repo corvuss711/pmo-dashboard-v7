@@ -343,7 +343,7 @@ const BASE_INITIATIVES = [
         formula: "Units registered on portal ÷ (Target industrial units − Units exempted)", rationale: "Track scheme adoption.",
         agency: "SPCB", source: "APCD Portal", numL: "registered", denL: "eligible units",
         context: ["Target industries", "Registered on portal", "Application submitted"], active: 1 },
-      { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% installation applications approved (post SAC and SPCB)", num: 666, den: 1149,
+      { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% installation applications approved (post SAC and SPCB)", showCumulative: true, num: 666, den: 1149,
         formula: "Approved applications (SAC reviewed, SPCB approval issued) ÷ Total applications submitted",
         rationale: "Track initiation of installation.", agency: "SPCB, SAC", source: "APCD Portal",
         numL: "approved", denL: "applications",

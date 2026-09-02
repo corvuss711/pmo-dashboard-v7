@@ -221,14 +221,18 @@ const BASIS_LABELS = {
 function StatusStrip({ cards, basis, onBasis }) {
   // Aggregate has no hidden metrics -- every L1/L2/L3 shows an Aggregate
   // figure or dot. Cumulative is different: only a handful of L1 metrics
-  // still carry a real month target (see targets.js) -- L2/L3 dropped their
-  // Cumulative row entirely, and noCumulative marks the L1s (APCD, OCEMS,
-  // ICCC) with no month target at all. Counting those as if they had a
-  // visible Cumulative reading is what produced the "74/74" mismatch --
-  // this only tallies what the toggle can actually show.
+  // still carry a real month target (see targets.js), plus any L2 metric
+  // explicitly flagged showCumulative (currently APCD's "% installation
+  // applications approved"). Everything else -- L3, and L1s marked
+  // noCumulative -- has no visible Cumulative reading at all. Counting those
+  // as if they did is what produced the "74/74" mismatch -- this only
+  // tallies what the toggle can actually show.
   const metrics = cards.flatMap((c) => (basis === "aggregate"
     ? [...c.ks, ...c.l2, ...c.l3]
-    : c.ksMonth.filter((m) => !m.noCumulative)));
+    : [
+        ...c.ksMonth.filter((m) => !m.noCumulative),
+        ...c.l2Month.filter((_, idx) => c.l2[idx]?.showCumulative),
+      ]));
   const total = metrics.length;
   const tally = { "On Track": 0, "At Risk": 0, Critical: 0 };
   for (const m of metrics) {
