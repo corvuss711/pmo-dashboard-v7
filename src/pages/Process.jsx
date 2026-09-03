@@ -192,7 +192,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                 <div key={k.id} style={{ flex: 1, minWidth: 270, border: `1px solid ${C.line}`, borderRadius: 6, padding: "11px 14px", background: "#FAFAF8" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: ".09em", color: C.faint, paddingTop: 2 }}>L1</span>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: C.ink, lineHeight: 1.3, flex: 1, textWrap: "pretty" }}>
+                    <span style={{ fontSize: 16.25, fontWeight: 700, color: C.ink, lineHeight: 1.3, flex: 1, textWrap: "pretty" }}>
                       {k.name}{k.live && <LiveBadge />}
                     </span>
                     <InfoButton onClick={() => setDetailId(k.id)} />
@@ -291,11 +291,11 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
 function PeriodRow({ label, view }) {
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 11.25, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 3 }}>
-        <span style={{ fontSize: 21, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: view.flag }}>{view.pct}</span>
+        <span style={{ fontSize: 21.25, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: view.flag }}>{view.pct}</span>
         <Bar view={view} height={7} />
-        <span style={{ fontSize: 14, fontFamily: "'Source Code Pro', monospace", color: C.mute, whiteSpace: "nowrap" }}>{view.frac}</span>
+        <span style={{ fontSize: 14.375, fontFamily: "'Source Code Pro', monospace", color: C.mute, whiteSpace: "nowrap" }}>{view.frac}</span>
       </div>
     </div>
   );
