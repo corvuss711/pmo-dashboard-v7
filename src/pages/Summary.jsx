@@ -205,7 +205,7 @@ function overallBand(views) {
 
 const BASIS_LABELS = {
   aggregate: { label: "Aggregate", hint: "Total" },
-  cumulative: { label: "Cumulative", hint: "Till date" },
+  cumulative: { label: "Cumulative (Till Date)", hint: "Till date" },
 };
 
 function StatusStrip({ cards, basis, onBasis }) {
@@ -299,7 +299,7 @@ function MetricsRow({ label, items }) {
   if (!items || items.length === 0) return null;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".04em", color: C.mute, whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 14, fontWeight: 800, letterSpacing: ".04em", color: C.mute, whiteSpace: "nowrap" }}>
         {label}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -419,7 +419,7 @@ function MetricRow({ k, km, onDetail, iKey, stacked, cumulative = true, cumulati
       <div style={{ display: "grid", gridTemplateColumns: stacked || !cumulative ? "1fr" : "1fr 1fr", gap: stacked ? 10 : 13, marginTop: 14 }}>
         <MetricPeriodBlock label="Aggregate" title="Total" icon={LayersIcon} accent={a.fg} view={k} loading={cumulativeLoading} primary />
         {cumulative && (
-          <MetricPeriodBlock label="Cumulative" title="Till date" icon={CalendarRangeIcon} accent={a.fg} view={km} loading={monthLoading} />
+          <MetricPeriodBlock label="Cumulative (Till Date)" title="Till date" icon={CalendarRangeIcon} accent={a.fg} view={km} loading={monthLoading} />
         )}
       </div>
     </>

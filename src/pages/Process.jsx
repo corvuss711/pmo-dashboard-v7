@@ -198,7 +198,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                     <InfoButton onClick={() => setDetailId(k.id)} />
                   </div>
                   <PeriodRow label="Aggregate" view={k} />
-                  {!k.noCumulative && <PeriodRow label="Cumulative" view={km} />}
+                  {!k.noCumulative && <PeriodRow label="Cumulative (Till Date)" view={km} />}
                 </div>
               );
             })}
@@ -227,7 +227,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                 return (
                   <div key={m.id} style={{ borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
                     <GridRow m={m} view={m} label={split ? "Aggregate" : null} onDetail={() => setDetailId(m.id)} />
-                    {split && <GridRow m={m} view={l2Month[idx] || m} label="Cumulative" />}
+                    {split && <GridRow m={m} view={l2Month[idx] || m} label="Cumulative (Till Date)" />}
                   </div>
                 );
               })}
@@ -307,22 +307,22 @@ function GridRow({ m, view, label, onDetail }) {
       <div style={{ minWidth: 0 }}>
         {onDetail ? (
           <>
-            <div style={{ fontSize: 10.5, color: C.faint, lineHeight: 1.15 }}>
+            <div style={{ fontSize: 13, color: C.faint, lineHeight: 1.15 }}>
               {label && <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase" }}>{label}</span>}
               {m.stageLabel ? `${label ? " · " : ""}${m.stageLabel}` : ""}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
+            <div style={{ fontSize: 17.5, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
               {m.name}{view.live && <LiveBadge />}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".05em", color: C.faint, textTransform: "uppercase", lineHeight: 1.15 }}>{label}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: ".05em", color: C.faint, textTransform: "uppercase", lineHeight: 1.15 }}>{label}</div>
         )}
       </div>
       <span />
-      <span style={{ fontSize: 19, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: view.flag }}>{view.pct}</span>
+      <span style={{ fontSize: 23.5, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", textAlign: "right", color: view.flag }}>{view.pct}</span>
       <span />
-      <span style={{ fontSize: 12.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{view.frac}</span>
+      <span style={{ fontSize: 15.5, fontFamily: "'Source Code Pro', monospace", color: C.mute }}>{view.frac}</span>
       <span />
       <Bar view={view} height={8} />
       <div style={{ justifySelf: "end" }}>{onDetail && <InfoButton onClick={onDetail} />}</div>
