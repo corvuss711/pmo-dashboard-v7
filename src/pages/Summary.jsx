@@ -59,8 +59,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         ksMonth = applyIcccOverrides(l1Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
       }
 
-      // Hard-coded targets are authoritative over any upstream denominator,
-      // so they are applied last.
       const liveFeed = API_INTEGRATED.has(i.key);
       if (liveFeed) ksMonth = zeroActuals(ksMonth);
       ks = applyTargets(ks, i.key, "All-Delhi NCR", "aggregate");
@@ -84,8 +82,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
 
       if (API_INTEGRATED.has(i.key)) l2Month = zeroActuals(l2Month);
 
-      // An L2 metric promoted onto the front tile alongside the L1 headline:
-      // Parivartan's portal registration, and OCEMS's installation base.
       const extraIdx = i.key.startsWith("parivartan")
         ? l2.findIndex((x) => x.name === "% registered on portal")
         : i.key === "ocems" ? 0 : -1;
@@ -141,12 +137,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         <StatusStrip cards={allCards} basis={basis} onBasis={setBasis} />
         <div style={{ flex: 1 }} />
         <DataMenu open={menu === "data"} onToggle={() => setMenu(menu === "data" ? null : "data")} />
-        {/* Date filter hidden 2026-08-24 per request -- `range` state and its
-            downstream use (rf, MRS/RR's fetch signature, "This Month" is a
-            separate fixed window via defaultRange()) are left intact so this
-            can be re-enabled by restoring the DateRange render below.
-        <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
-          onToggle={() => setMenu(menu === "range" ? null : "range")} /> */}
       </div>
 
       <div style={{ padding: "28px 28px 56px", display: "flex", flexDirection: "column", gap: 32 }}>
@@ -219,14 +209,6 @@ const BASIS_LABELS = {
 };
 
 function StatusStrip({ cards, basis, onBasis }) {
-  // Aggregate has no hidden metrics -- every L1/L2/L3 shows an Aggregate
-  // figure or dot. Cumulative is different: only a handful of L1 metrics
-  // still carry a real month target (see targets.js), plus any L2 metric
-  // explicitly flagged showCumulative (currently APCD's "% installation
-  // applications approved"). Everything else -- L3, and L1s marked
-  // noCumulative -- has no visible Cumulative reading at all. Counting those
-  // as if they did is what produced the "74/74" mismatch -- this only
-  // tallies what the toggle can actually show.
   const metrics = cards.flatMap((c) => (basis === "aggregate"
     ? [...c.ks, ...c.l2, ...c.l3]
     : [

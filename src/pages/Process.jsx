@@ -46,11 +46,6 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
   const icccLiveActive = initiative.key === "iccc" && (region === "All-Delhi NCR" || region === "Delhi");
   const { byKey: icccByKey, loading: icccLoading } = useIcccSummary(icccLiveActive);
 
-  // Initiatives whose every L1 metric hides the Cumulative row, AND have no
-  // L2 metric flagged showCumulative, never display month data -- neither
-  // fetch it nor let it gate the loading banner. (APCD's L1 hides
-  // Cumulative, but its "% installation applications approved" L2 metric
-  // does not -- checking l1 alone starved that row of live month data.)
   const needsMonth = initiative.l1.some((m) => !m.noCumulative)
     || initiative.metrics.some((m) => m.showCumulative);
 
@@ -181,18 +176,6 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
                   }
                 }))} />
             )}
-            {/* Date filter hidden 2026-08-24 per request, everywhere in the
-                app -- both branches (APCD's single-date lookup and the
-                generic range picker). apcdDate/range state and their
-                downstream use (rf, live fetches) are left intact so this is
-                a one-line restore later.
-            {initiative.key === "apcd" ? (
-              <SingleDatePicker date={apcdDate} setDate={setApcdDate} open={menu === "range"}
-                onToggle={() => setMenu(menu === "range" ? null : "range")} />
-            ) : (
-              <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
-                onToggle={() => setMenu(menu === "range" ? null : "range")} />
-            )} */}
           </div>
 
           {liveLoading && (

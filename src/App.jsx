@@ -18,7 +18,7 @@ function parseHash() {
 
 export default function App() {
   const [route, setRoute] = useState(parseHash);
-  const [authStatus, setAuthStatus] = useState("checking"); // "checking" | "in" | "out"
+  const [authStatus, setAuthStatus] = useState("checking");
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -55,10 +55,6 @@ export default function App() {
 
   const initiative = INITIATIVES.find((i) => i.key === route.screen);
   if (!initiative) return <Summary onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
-  // ICCC has no per-state breakdown -- Comparative's 4-state grid never
-  // applies to it, regardless of how this route was reached (bookmark,
-  // back button, a stale link), same reasoning as Process.jsx hiding
-  // ICCC's region picker.
   if (route.level === "comparative" && initiative.key !== "iccc") {
     return <Comparative initiative={initiative} onNavigate={go} onLogout={handleLogout} loggingOut={loggingOut} />;
   }

@@ -121,8 +121,6 @@ export const PinIcon = (
 export function DateRange({ range, setRange, open, onToggle }) {
   const { days } = rangeFactor(range.from, range.to);
   const now = new Date();
-  // Local-time date string (not toISOString, which shifts to UTC and can land on the wrong day) --
-  // caps selection at "now", not a stale hardcoded date.
   const today = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   return (
     <div data-menu-root style={{ position: "relative", flex: "none" }}>

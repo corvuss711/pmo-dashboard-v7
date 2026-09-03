@@ -7,9 +7,6 @@ function toDateStr(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
-// Default date-range: 1st of the current month through today (local time --
-// avoids the date rolling to the wrong day that toISOString()'s UTC
-// conversion would cause near midnight).
 export function defaultRange() {
   const now = new Date();
   return { from: toDateStr(new Date(now.getFullYear(), now.getMonth(), 1)), to: toDateStr(now) };
@@ -17,10 +14,6 @@ export function defaultRange() {
 
 const DATE_RANGE_STORAGE_KEY = "pmoDateRange";
 
-// Reads a previously-picked date range back from localStorage (shared across
-// Summary/Process/Comparative, so a choice on one page carries to the
-// others and survives a refresh), falling back to defaultRange() if nothing
-// was saved yet or localStorage is unavailable (privacy mode, etc.).
 export function loadPersistedRange() {
   try {
     const raw = localStorage.getItem(DATE_RANGE_STORAGE_KEY);
@@ -29,7 +22,6 @@ export function loadPersistedRange() {
       if (parsed && typeof parsed.from === "string" && typeof parsed.to === "string") return parsed;
     }
   } catch {
-    // Fall through to the default.
   }
   return defaultRange();
 }
@@ -38,12 +30,9 @@ export function savePersistedRange(range) {
   try {
     localStorage.setItem(DATE_RANGE_STORAGE_KEY, JSON.stringify(range));
   } catch {
-    // Best-effort only.
   }
 }
 
-/* NCR-level roll-ups. Numerators are summed across Delhi, UP, Rajasthan and Haryana
-   from the same state figures the six state dashboards use. */
 const BASE_INITIATIVES = [
   { key: "parivartan", name: "PARIVARTAN", ministry: "MORTH", owner: "MoRTH · NCRPB",
     splits: [{ key: "trucks", label: "Trucks", mult: 0.82, perf: 1.06 }, { key: "buses", label: "Buses", mult: 0.18, perf: 0.72 }],
@@ -116,13 +105,6 @@ const BASE_INITIATIVES = [
         numL: "released", denL: "claims approved",
         context: ["OMC / CGD validate usage", "MoPNG validates data", "NCRPB releases payment"], active: 2 }
     ],
-    // L3: SLA-breach process metrics, sourced from the scheme's formula sheet
-    // (2026-08-22). #5 in that sheet's numbering was cut off the source
-    // screenshot -- only #1-4 and #6-8 are entered here; #5 to be added once
-    // its row (name/formula/rationale/agency/source) is available. Every
-    // num/den is 0 -- none of these have a live source hooked up yet, same
-    // "no data" convention as the rest of this file's not-yet-integrated
-    // metrics.
     l3: [
       { stage: 2, stageLabel: "Scrap vs sell", name: "% NOC approval pending at RTO (> SLA)", num: 0, den: 0,
         formula: "No. of NOCs pending at RTO > SLA ÷ No. of NOC applications",
@@ -166,8 +148,6 @@ const BASE_INITIATIVES = [
         context: ["MoPNG approves claim", "Payment pending at NCRPB", "NCRPB releases payment"], active: 1 }
     ] },
 
-  // hidden: metric definitions are still being finalised, so it is kept in
-  // the dataset but shown nowhere (no tile, no dropdown entry).
   { key: "green-contribution", hidden: true, name: "Green Contribution", ministry: "MORTH", owner: "MoRTH · NHAI",
     note: "Programme under design phase",
     footNote: "Metric definitions are being finalised; no data feed is live yet.",
@@ -377,11 +357,6 @@ const BASE_INITIATIVES = [
         agency: "SPCB", source: "OCEMS Portal", numL: "with no red alert", denL: "active OCEMS",
         context: ["OCEMS active", "CPCB norms applied", "No red alert"], active: 2 }
     ],
-    // L3: SLA-breach process metrics for the APCD scheme only (sourced from
-    // the scheme's formula sheet, 2026-08-22) -- all seg: "apcd" so they're
-    // hidden when the "OCEMS installation" segment is selected, same as the
-    // rest of this tile's apcd-only rows. num/den both 0 -- no live source
-    // wired up yet, same "no data" convention as everywhere else.
     l3: [
       { seg: "apcd", stage: 2, stageLabel: "Screening & approval", name: "% applications where SAC reviews pending (>SLA)", num: 0, den: 0,
         formula: "No. of applications pending SAC review > 5-day SLA ÷ No. of applications submitted",
@@ -444,13 +419,6 @@ const BASE_INITIATIVES = [
 
 ];
 
-// Two initiatives are tracked as one dataset upstream but presented as
-// separate initiatives: Parivartan by vehicle class, and the MoEFCC
-// industries tile by scheme. Splitting here rather than in the pages means
-// the tiles, the Process page, the initiative dropdown and routing all see
-// them as first-class initiatives -- and the segment pickers that used to
-// switch between them disappear on their own, since a split initiative has
-// no `splits`.
 const SPLIT_INITIATIVES = {
   parivartan: [
     { seg: "trucks", key: "parivartan-trucks", name: "PARIVARTAN \u2014 Trucks" },
@@ -462,9 +430,6 @@ const SPLIT_INITIATIVES = {
   ],
 };
 
-// Same rule segApply uses: a seg-tagged list is filtered to this segment,
-// an untagged list is shared by every segment (e.g. Parivartan's L2/L3,
-// one process pipeline serving both vehicle classes).
 const pickSeg = (defs, seg) =>
   (defs || []).some((d) => d.seg) ? defs.filter((d) => d.seg === seg) : defs || [];
 
@@ -493,8 +458,6 @@ export const NAV = [
   ...VISIBLE_INITIATIVES.map((i) => ({ key: i.key, label: i.name })),
 ];
 
-/* Per-state split of each NCR roll-up: [share of denominator, relative performance].
-   State figures are derived from these weights and always sum back to the NCR total. */
 export const REGIONS = ["Delhi", "UP", "Rajasthan", "Haryana"];
 export const REGION_W = {
   parivartan: [[0.27, 1.25], [0.38, 0.95], [0.13, 0.68], [0.22, 1.05]],

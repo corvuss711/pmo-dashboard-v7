@@ -28,8 +28,6 @@ export const TARGETS = {
     "% installation applications approved (post SAC and SPCB)": {
       liveOnly: true,
       aggregate: { "All-Delhi NCR": 2121, Delhi: 48, Haryana: 1229, Rajasthan: 244, UP: 600 },
-      // NCR total is the sheet's own Cumulative-column figure, not the sum of
-      // the four state targets below (24+614+122+300=1060) -- taken as given.
       cumulative: { "All-Delhi NCR": 3181, Delhi: 24, Haryana: 614, Rajasthan: 122, UP: 300 },
     },
     "% applications rejected": {
@@ -77,9 +75,6 @@ export function targetFor(initiativeKey, metricName, region, period, seg) {
   return t == null ? null : { value: t, liveOnly: !!cfg.liveOnly, percent: !!cfg.percent };
 }
 
-// Rebuilds a view against its hard-coded target. A metric with no live
-// numerator reads "N/A" against the target rather than a fabricated 0 --
-// the target is real, the actual simply has not been reported yet.
 export function withTarget(view, target) {
   if (target == null) return view;
   const { value, liveOnly, percent } = target;

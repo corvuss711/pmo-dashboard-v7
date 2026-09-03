@@ -57,11 +57,6 @@ export function withNoDataMessage(view, message = "Data not provided") {
   };
 }
 
-// The upstreams have no month-scoped data yet, so a "cumulative" request
-// falls back to the stored since-launch snapshot -- an aggregate actual
-// against a monthly target (115 deployed vs a target of 9). Zero the actual
-// so the period reads honestly as "nothing reported this month" instead.
-// Only for initiatives with a live feed; the rest keep their own values.
 export function zeroActuals(views) {
   return views.map((v) => {
     if (v.num == null) return v;

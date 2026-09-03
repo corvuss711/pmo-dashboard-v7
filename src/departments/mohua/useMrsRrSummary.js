@@ -22,8 +22,6 @@ export function useMrsRrSummary(active, region, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[CAQM] mrs-rr-summary fetch failed:", err);
-        // keep whatever is already on screen -- a failed refresh must not
-        // replace real stored data with an empty result
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -56,7 +54,6 @@ export function useMrsRrSummaryByState(active, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[CAQM] mrs-rr-summary-multi fetch failed:", err);
-        // keep whatever is already on screen -- see above
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -24,8 +24,6 @@ export function useIcccSummary(active, fromDate, toDate) {
       })
       .catch((err) => {
         console.error("[ICCC] iccc-summary fetch failed:", err);
-        // keep whatever is already on screen -- a failed refresh must not
-        // replace real stored data with an empty result
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

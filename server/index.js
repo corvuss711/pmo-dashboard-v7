@@ -8,9 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.PORT || 3001;
 const UPSTREAM_BASE = process.env.UPSTREAM_BASE_URL || "http://74.225.180.0/pmo_dashboard";
-const COOKIE_NAME = "phase3_auth_token"; // namespaced so it can't collide with another app's cookie on the same host
+const COOKIE_NAME = "phase3_auth_token";
 const isProd = process.env.NODE_ENV === "production";
-// The site is served over plain HTTP (http://20.219.138.129/phase3), so `secure: true` would make
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
 const app = express();
@@ -21,9 +20,9 @@ app.use(cors({ origin: process.env.CLIENT_ORIGIN || true, credentials: true }));
 const authCookieOptions = {
   httpOnly: true,
   secure: COOKIE_SECURE,
-  sameSite: "lax", // frontend and API share one origin (Nginx serves both under the same host), so "lax" is correct
+  sameSite: "lax",
   path: "/",
-  maxAge: 1000 * 60 * 60 * 12, // 12h
+  maxAge: 1000 * 60 * 60 * 12,
 };
 
 
@@ -173,7 +172,6 @@ metrics.get("/apcd-summary", async (req, res) => {
   }
 });
 
-// Batched variant -- 1 request for several states instead of 4.
 metrics.get("/apcd-summary-multi", async (req, res) => {
   const { stateIds, cityId, date, monthStart } = req.query;
   if (!stateIds) {

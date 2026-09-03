@@ -1,4 +1,3 @@
-// import.meta.env.BASE_URL mirrors vite.config.js's `base` — "/" in dev, "/phase3/" in the built app.
 const API_BASE = `${import.meta.env.BASE_URL}api`.replace(/\/{2,}/g, "/");
 
 export function apiUrl(path) {
@@ -7,10 +6,6 @@ export function apiUrl(path) {
 
 const TTL_MS = 5 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 12000;
-// A page load fires ~6 requests at once. The backend runs few workers, so
-// letting them all through makes one queue past the proxy's own timeout --
-// which is what made a first load intermittently come up empty while a
-// refresh worked. Three at a time keeps every request well inside it.
 const MAX_CONCURRENT = 3;
 const RETRIES = 2;
 const RETRY_BASE_MS = 400;
@@ -52,8 +47,6 @@ async function fetchJson(url) {
   return data;
 }
 
-// Retries a timeout or 5xx, which are transient under load. A 4xx is a real
-// answer about this URL and repeating it would only waste a worker.
 async function fetchWithRetry(url) {
   let lastErr;
   for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
@@ -81,8 +74,6 @@ export function cachedJson(url, parse) {
       cache.set(url, { at: Date.now(), value });
       return value;
     })
-    // Entries are kept past TTL_MS on purpose: serving the last good response
-    // beats blanking the page when a refresh fails.
     .catch((err) => {
       if (hit) return hit.value;
       throw err;

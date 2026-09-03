@@ -49,8 +49,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
   const { byState: apcdByState, loading: apcdLoading } = useApcdSummaryByState(apcdActive);
 
 
-  // See Process.jsx -- do not fetch or wait on month data a page never shows.
-  // See Process.jsx's needsMonth for why l1 alone is not sufficient.
   const needsMonth = initiative.l1.some((m) => !m.noCumulative)
     || initiative.metrics.some((m) => m.showCumulative);
 
@@ -92,7 +90,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             fontWeight: 600, color: C.blue, cursor: "pointer", whiteSpace: "nowrap"
           }}>‹ All initiatives</button>
 
-        {/* Initiative Selector Dropdown */}
         <div data-menu-root style={{ position: "relative", flex: "none" }}>
           <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
             style={{
@@ -110,9 +107,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
                 <button key={n.key} type="button"
                   onClick={() => {
                     setMenu(null); setSeg(null);
-                    // ICCC has no per-state breakdown at all -- Comparative's
-                    // 4-state grid doesn't apply to it, same reason Process.jsx
-                    // hides ICCC's region picker. Land on Process instead.
                     onNavigate(n.key, n.key === "iccc" ? "All-Delhi NCR" : "comparative");
                   }}
                   style={{
@@ -130,7 +124,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
         <span style={{ fontSize: 14, color: C.mute, whiteSpace: "nowrap" }}>{initiative.owner}</span>
         <div style={{ flex: 1 }} />
 
-        {/* Segment Filter (e.g. Trucks / Buses for Parivartan, Road widths for MRS, APCD/OCEMS for CEMS) */}
         {curSeg && (
           <Dropdown label={curSeg.label} icon={LayersIcon} open={menu === "seg"}
             onToggle={() => setMenu(menu === "seg" ? null : "seg")}
@@ -140,15 +133,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             }))} />
         )}
 
-        {/* State/region picker -- previously only available on Process.jsx,
-            leaving no way to jump from Comparative straight to a single
-            state's process view without going back through Summary first.
-            "Comparative" itself is always the selected label here, since
-            this page has no single-region concept of its own; picking any
-            other option navigates to Process.jsx for that region. Hidden
-            for ICCC, same as Process.jsx -- no per-state breakdown upstream
-            at all (and Process.jsx's own picker never offers "Comparative"
-            for ICCC, so this page shouldn't normally be reached for it). */}
         {initiative.key !== "iccc" && (
           <Dropdown label="Comparative" icon={PinIcon} open={menu === "region"}
             onToggle={() => setMenu(menu === "region" ? null : "region")}
@@ -163,10 +147,6 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
             }))} />
         )}
 
-        {/* Date filter hidden 2026-08-24 per request, everywhere in the app --
-            range state is left intact so this is a one-line restore later.
-        <DateRange range={range} setRange={(r) => setRange({ ...range, ...r })} open={menu === "range"}
-          onToggle={() => setMenu(menu === "range" ? null : "range")} /> */}
       </div>
 
       {liveLoading && (
@@ -209,12 +189,10 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
 
           return (
             <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)", overflow: "hidden" }}>
-              {/* Card State Header */}
               <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
                 <span style={{ padding: "5px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{r}</span>
               </div>
 
-              {/* L1 Metric Section */}
               <div style={{ background: "#fff" }}>
                 <div style={{ padding: "12px 14px 4px", background: "#fff" }}>
                   <span style={{ display: "inline-block", border: `1.5px solid ${C.blue}`, borderRadius: 4, padding: "3px 8px", fontSize: 10.5, fontWeight: 800, letterSpacing: ".06em", color: C.ink, textTransform: "uppercase", background: "#F1F5FF" }}>
@@ -235,10 +213,8 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
                 ))}
               </div>
 
-              {/* Prominent High-Visibility Horizontal Divider */}
               <div style={{ height: 3, background: "#475569" }} />
 
-              {/* L2 Process Metrics Section */}
               <div style={{ background: "#FAFAF8" }}>
                 <div style={{ padding: "11px 14px 7px", borderBottom: `1px solid ${C.line2}`, background: "#FAFAF8" }}>
                   <span style={{ display: "inline-block", border: `1.5px solid ${C.line}`, borderRadius: 4, padding: "3px 8px", fontSize: 10.5, fontWeight: 800, letterSpacing: ".06em", color: C.ink, textTransform: "uppercase", background: "#F0F0EB" }}>

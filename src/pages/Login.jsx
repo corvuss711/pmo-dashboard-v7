@@ -73,7 +73,6 @@ export default function Login({ onLogin }) {
       }}>
         <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: 380 }}>
           <div style={{ fontSize: 24, fontWeight: 800, color: C.ink }}>Sign in to your account</div>
-          {/* <div style={{ fontSize: 14, color: C.mute, marginTop: 6 }}>Enter your credentials to access the dashboard.</div> */}
 
           {error && (
             <div style={{

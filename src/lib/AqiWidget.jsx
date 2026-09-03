@@ -43,7 +43,7 @@ function movingAverage(arr, window) {
 
 const DUMMY_MA7 = movingAverage(DUMMY_DAILY, 7);
 const DUMMY_TREND30 = movingAverage(DUMMY_DAILY, 30);
-const DUMMY_BASELINE_2025 = DUMMY_DAILY.map((_, t) => 82 - t * 0.06); // flat-ish reference, no live source
+const DUMMY_BASELINE_2025 = DUMMY_DAILY.map((_, t) => 82 - t * 0.06);
 
 const DUMMY_STATS = {
   periodAvgPm25: 77,
@@ -116,7 +116,6 @@ function StatCard({ label, value, unit, sub, subColor }) {
   );
 }
 
-// Maps a value (0..191 index range or a y-value range) to an SVG path string.
 function buildPath(values, w, h, yMax) {
   return values.map((v, i) => {
     const x = (i / (values.length - 1)) * w;
@@ -163,12 +162,10 @@ function Chart({ showDaily, showMa7, showTrend30, showBaseline }) {
           fill="none" stroke="#1D3F86" strokeWidth="2.4" />
       )}
 
-      {/* 24h Limit (60) */}
       <line x1={PAD_L} y1={chartH - (60 / yMax) * chartH} x2={W} y2={chartH - (60 / yMax) * chartH}
         stroke="#C0392B" strokeWidth="1.2" strokeDasharray="4 3" />
       <text x={W - 4} y={chartH - (60 / yMax) * chartH - 5} textAnchor="end" fontSize="9.5" fill="#C0392B" fontWeight="700">24h Limit (60)</text>
 
-      {/* Annual Target (40) */}
       <line x1={PAD_L} y1={chartH - (40 / yMax) * chartH} x2={W} y2={chartH - (40 / yMax) * chartH}
         stroke="#2E7D32" strokeWidth="1.2" strokeDasharray="1 3" />
       <text x={W - 4} y={chartH - (40 / yMax) * chartH + 13} textAnchor="end" fontSize="9.5" fill="#2E7D32" fontWeight="700">Annual Target (40)</text>
