@@ -108,13 +108,13 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         </button>
       </header>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, rowGap: 10, flexWrap: "wrap", padding: "14px 24px", background: C.bar,
+      <div style={{ display: "flex", alignItems: "center", gap: 12, rowGap: 10, flexWrap: "wrap", padding: "16px 24px", background: C.bar,
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 63, zIndex: 30,
         boxShadow: "0 8px 16px -12px rgba(35,37,39,.45)" }}>
         <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".12em", color: C.mute }}>INITIATIVE</span>
         <div data-menu-root style={{ position: "relative" }}>
           <button type="button" onClick={() => setMenu(menu === "ini" ? null : "ini")}
-            style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 16px", background: C.blue, color: "#fff",
+            style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", background: C.blue, color: "#fff",
               border: 0, borderRadius: 6, fontFamily: "inherit", fontWeight: 700, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}>
             All initiatives — Summary <span style={{ opacity: 0.7, fontSize: 10 }}>▾</span>
           </button>
@@ -232,7 +232,7 @@ function StatusStrip({ cards, basis, onBasis }) {
         background: "#fff", border: `1px solid ${C.line}` }}>
         {Object.entries(BASIS_LABELS).map(([key, v]) => (
           <button key={key} type="button" onClick={() => onBasis(key)} title={v.hint}
-            style={{ padding: "5px 11px", borderRadius: 5, cursor: "pointer", fontFamily: "inherit", border: 0,
+            style={{ padding: "9px 14px", borderRadius: 5, cursor: "pointer", fontFamily: "inherit", border: 0,
               fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
               background: basis === key ? C.blue : "transparent",
               color: basis === key ? "#fff" : C.mute }}>{v.label}</button>
@@ -242,7 +242,7 @@ function StatusStrip({ cards, basis, onBasis }) {
         <div key={c.word} title={basis === "aggregate"
           ? `${c.word} — ${c.n} of ${total} metrics across L1, L2 and L3`
           : `${c.word} — ${c.n} of ${total} L1 metrics with a Cumulative target`}
-          style={{ display: "flex", alignItems: "center", gap: 9, padding: "6px 13px", borderRadius: 7,
+          style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 15px", borderRadius: 7,
             background: track(c.at), border: `1px solid ${flag(c.at)}33`, whiteSpace: "nowrap" }}>
           <span style={{ width: 9, height: 9, borderRadius: "50%", background: flag(c.at), flex: "none" }} />
           <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".05em", color: flag(c.at), textTransform: "uppercase" }}>
@@ -262,7 +262,7 @@ function DataMenu({ open, onToggle }) {
   return (
     <div data-menu-root style={{ position: "relative", flex: "none" }}>
       <button type="button" onClick={onToggle}
-        style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 16px", background: "#fff",
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "13px 18px", background: "#fff",
           border: `1px solid ${C.line}`, borderRadius: 6, fontFamily: "inherit", fontWeight: 700, fontSize: 14,
           color: C.blue, cursor: "pointer", whiteSpace: "nowrap" }}>
         <span style={{ color: ICON }}><LayersIcon size={15} strokeWidth={2.4} /></span>
@@ -431,7 +431,7 @@ function MetricPeriodBlock({ label, icon: Ico, accent, view, title, loading, pri
     <div title={title} style={{ minWidth: 0, padding: "11px 14px 12px", borderRadius: 7,
       background: primary ? "#FAFAF8" : "#fff", border: `1px solid ${primary ? C.line : C.line2}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9, fontSize: 11, fontWeight: 800,
-        letterSpacing: ".1em", color: C.mute, textTransform: "uppercase" }}>
+        letterSpacing: ".1em", color: C.ink, textTransform: "uppercase" }}>
         {Ico && <span style={{ color: accent || ICON }}><Ico size={14} strokeWidth={2.5} /></span>}{label}
       </div>
       {loading ? (
@@ -446,7 +446,7 @@ function MetricPeriodBlock({ label, icon: Ico, accent, view, title, loading, pri
               fontFamily: "'Source Code Pro', monospace" }}>{view.pct}</span>
           )}
           <Bar view={view} height={8} />
-          <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.mute,
+          <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "'Source Code Pro', monospace", color: C.ink,
             flex: "none", whiteSpace: "nowrap" }}>{view.frac}</span>
         </div>
       )}
