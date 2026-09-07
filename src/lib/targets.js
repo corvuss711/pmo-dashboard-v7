@@ -61,11 +61,6 @@ export const TARGETS = {
       cumulative: { "All-Delhi NCR": 2508, Delhi: 1226, Haryana: 466, Rajasthan: 100, UP: 716 },
     },
   },
-  iccc: {
-    "% sites complying with identified interventions": {
-      aggregate: { "All-Delhi NCR": 1869, Delhi: 1869 },
-    },
-  },
 };
 
 export function targetFor(initiativeKey, metricName, region, period, seg) {
