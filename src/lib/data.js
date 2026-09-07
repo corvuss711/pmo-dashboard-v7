@@ -276,7 +276,7 @@ const BASE_INITIATIVES = [
         glossary: "Intake is a rate, not a percentage — it has no target band." }
     ] },
 
-  { key: "greening", name: "Greening", ministry: "MOHUA", owner: "MoEFCC · State forest depts.",
+  { key: "greening", hidden: true, name: "Greening", ministry: "MOHUA", owner: "MoEFCC · State forest depts.",
     footNote: "Plantation and area figures are reported by state greening agencies.",
     l1: [{ name: "% target area greened", num: 0, den: 0,
       formula: "Actual target area greened ÷ Target area to be greened",

@@ -9,7 +9,6 @@ import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { applyTargets } from "../lib/targets.js";
 import { zeroActuals } from "../lib/liveOverrides.js";
-import { AqiWidget } from "../lib/AqiWidget.jsx";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -112,8 +111,6 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
         borderBottom: `1px solid ${C.line}`, position: "sticky", top: 0, zIndex: 40 }}>
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
-        <div style={{ flex: 1 }} />
-        <AqiWidget />
         <div style={{ flex: 1 }} />
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
@@ -291,7 +288,7 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
 function PeriodRow({ label, view }) {
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ fontSize: 11.25, fontWeight: 800, letterSpacing: ".07em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 11.25, fontWeight: 800, letterSpacing: ".07em", color: C.ink, textTransform: "uppercase" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 3 }}>
         <span style={{ fontSize: 21.25, fontWeight: 800, fontFamily: "'Source Code Pro', monospace", color: view.flag }}>{view.pct}</span>
         <Bar view={view} height={7} />
@@ -308,7 +305,7 @@ function GridRow({ m, view, label, onDetail }) {
         {onDetail ? (
           <>
             <div style={{ fontSize: 13, color: C.faint, lineHeight: 1.15 }}>
-              {label && <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase" }}>{label}</span>}
+              {label && <span style={{ fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase", color: C.ink }}>{label}</span>}
               {m.stageLabel ? `${label ? " · " : ""}${m.stageLabel}` : ""}
             </div>
             <div style={{ fontSize: 17.5, fontWeight: 700, color: C.ink, lineHeight: 1.3, marginTop: 2, textWrap: "pretty" }}>
@@ -316,7 +313,7 @@ function GridRow({ m, view, label, onDetail }) {
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: ".05em", color: C.faint, textTransform: "uppercase", lineHeight: 1.15 }}>{label}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: ".05em", color: C.ink, textTransform: "uppercase", lineHeight: 1.15 }}>{label}</div>
         )}
       </div>
       <span />

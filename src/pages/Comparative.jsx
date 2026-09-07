@@ -17,7 +17,7 @@ const LayersIcon = (
 function PeriodBlock({ label, view }) {
   return (
     <div style={{ marginTop: 9, padding: "7px 9px 8px", borderRadius: 6, background: "#FAFAF8", border: `1px solid ${C.line2}` }}>
-      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".09em", color: C.faint, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: ".09em", color: C.ink, textTransform: "uppercase" }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
         <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1, color: view.flag, fontFamily: "'Source Code Pro', monospace", flex: "none" }}>{view.pct}</span>
         <Bar view={view} height={6} />
@@ -188,8 +188,10 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
           l2s = applyTargets(l2s, initiative.key, r, "aggregate", activeSegKey);
 
           return (
-            <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", borderBottom: `1px solid ${C.line2}`, background: "#fff" }}>
+            <article key={r} data-card style={{ background: "#fff", border: "1.5px solid #CBD5E1", borderRadius: 6, display: "flex", flexDirection: "column", boxShadow: "0 2px 6px rgba(0,0,0,.06)" }}>
+              <div style={{ display: "flex", alignItems: "center", padding: "12px 14px", borderBottom: `1px solid ${C.line2}`, background: "#fff",
+                borderTopLeftRadius: 6, borderTopRightRadius: 6,
+                position: "sticky", top: 127, zIndex: 20 }}>
                 <span style={{ padding: "5px 12px", background: C.blue, color: "#fff", borderRadius: 4, fontSize: 13.5, fontWeight: 700 }}>{r}</span>
               </div>
 
@@ -215,7 +217,7 @@ export default function Comparative({ initiative, onNavigate, onLogout, loggingO
 
               <div style={{ height: 3, background: "#475569" }} />
 
-              <div style={{ background: "#FAFAF8" }}>
+              <div style={{ background: "#FAFAF8", borderBottomLeftRadius: 6, borderBottomRightRadius: 6, overflow: "hidden" }}>
                 <div style={{ padding: "11px 14px 7px", borderBottom: `1px solid ${C.line2}`, background: "#FAFAF8" }}>
                   <span style={{ display: "inline-block", border: `1.5px solid ${C.line}`, borderRadius: 4, padding: "3px 8px", fontSize: 10.5, fontWeight: 800, letterSpacing: ".06em", color: C.ink, textTransform: "uppercase", background: "#F0F0EB" }}>
                     L2 PROCESS METRICS

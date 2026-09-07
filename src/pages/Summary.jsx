@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { VISIBLE_INITIATIVES, API_INTEGRATED, MINISTRIES, NAV, l1Of, l2Of, l3Of, flag, track, statusWord, rangeFactor, loadPersistedRange, savePersistedRange, defaultRange } from "../lib/data.js";
 import { C, Bar, InfoButton, DateRange, DetailDrawer, SpinnerIcon, LiveBadge, ApiIntegratedBadge, DelhiOnlyBadge, useCloseMenuOnOutsideClick } from "../lib/ui.jsx";
-import { AqiWidget } from "../lib/AqiWidget.jsx";
 import { useApcdSummary } from "../departments/moefcc/useApcdSummary.js";
 import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
@@ -99,8 +98,6 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
         <img src={`${import.meta.env.BASE_URL}emblem.png`} alt="Government of India" style={{ width: 38, height: 38, objectFit: "contain" }} />
         <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-.01em", color: C.blue }}>Delhi NCR Clean Air Dashboard</div>
         <div style={{ flex: 1 }} />
-        <AqiWidget />
-        <div style={{ flex: 1 }} />
         <button type="button" onClick={onLogout} disabled={loggingOut} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
           border: "1px solid #D8D8D2", borderRadius: 6, background: "#fff", color: C.blue, fontWeight: 600, fontSize: 14,
           fontFamily: "inherit", cursor: loggingOut ? "default" : "pointer", opacity: loggingOut ? 0.7 : 1 }}>
@@ -152,8 +149,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
             return mate ? rowsOf(c) < rowsOf(mate) : false;
           });
 
-          const card = (c, fill, stacked) => (
-            <InitiativeCard key={c.i.key} {...c} fill={fill} stacked={stacked} basis={basis}
+          const card = (c, fill, stacked, wide) => (
+            <InitiativeCard key={c.i.key} {...c} fill={fill} stacked={stacked} wide={wide} basis={basis}
               hovered={hoveredCard === c.i.key}
               onHover={() => setHoveredCard(c.i.key)}
               onLeave={() => setHoveredCard(null)}
@@ -174,10 +171,10 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
               {cards.length === 1 ? (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr" }}>{card(cards[0], false)}</div>
               ) : splitLayout ? (
-                <div style={{ display: "flex", gap: 20, alignItems: "stretch" }}>
-                  {card(big[0], "row")}
-                  <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-                    {small.map((c) => card(c, "col"))}
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  {card(big[0], false, false, true)}
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${small.length}, minmax(0,1fr))`, gap: 20 }}>
+                    {small.map((c) => card(c, false))}
                   </div>
                 </div>
               ) : (
@@ -216,15 +213,17 @@ function StatusStrip({ cards, basis, onBasis }) {
         ...c.l2Month.filter((_, idx) => c.l2[idx]?.showCumulative),
       ]));
   const total = metrics.length;
-  const tally = { "On Track": 0, "At Risk": 0, Critical: 0 };
+  const tally = { "On Track": 0, "At Risk": 0, Critical: 0, "API Not Integrated": 0 };
   for (const m of metrics) {
+    if (!m.live) { tally["API Not Integrated"] += 1; continue; }
     const word = m.status && m.status in tally ? m.status : statusWord(m.raw || 0);
     tally[word] += 1;
   }
   const counts = [
-    { word: "On Track", n: tally["On Track"], at: 100 },
-    { word: "At Risk", n: tally["At Risk"], at: 60 },
-    { word: "Critical", n: tally.Critical, at: 0 },
+    { word: "On Track", n: tally["On Track"], color: flag(100), bg: track(100) },
+    { word: "At Risk", n: tally["At Risk"], color: flag(60), bg: track(60) },
+    { word: "Critical", n: tally.Critical, color: flag(0), bg: track(0) },
+    { word: "API Not Integrated", n: tally["API Not Integrated"], color: C.ink, bg: C.paper },
   ];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
@@ -239,17 +238,19 @@ function StatusStrip({ cards, basis, onBasis }) {
         ))}
       </div>
       {counts.map((c) => (
-        <div key={c.word} title={basis === "aggregate"
+        <div key={c.word} title={c.word === "API Not Integrated"
+          ? `${c.n} of ${total} metrics have no live API data yet`
+          : basis === "aggregate"
           ? `${c.word} — ${c.n} of ${total} metrics across L1, L2 and L3`
           : `${c.word} — ${c.n} of ${total} L1 metrics with a Cumulative target`}
           style={{ display: "flex", alignItems: "center", gap: 9, padding: "10px 15px", borderRadius: 7,
-            background: track(c.at), border: `1px solid ${flag(c.at)}33`, whiteSpace: "nowrap" }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: flag(c.at), flex: "none" }} />
-          <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".05em", color: flag(c.at), textTransform: "uppercase" }}>
+            background: c.bg, border: `1px solid ${c.color}33`, whiteSpace: "nowrap" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: c.color, flex: "none" }} />
+          <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: ".05em", color: c.color, textTransform: "uppercase" }}>
             {c.word}
           </span>
           <span style={{ display: "flex", alignItems: "baseline", gap: 1, fontFamily: "'Source Code Pro', monospace" }}>
-            <span style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: flag(c.at) }}>{c.n}</span>
+            <span style={{ fontSize: 17, fontWeight: 800, lineHeight: 1, color: c.color }}>{c.n}</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: C.faint }}>/{total}</span>
           </span>
         </div>
@@ -303,11 +304,14 @@ function MetricsRow({ label, items }) {
         {label}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        {items.map((m) => (
-          <span key={m.id} title={`${m.name} — ${m.status}`}
-            style={{ width: 11, height: 11, borderRadius: "50%", background: m.flag,
-              border: "1px solid rgba(0,0,0,.10)", flex: "none" }} />
-        ))}
+        {items.map((m) => {
+          const black = !m.live;
+          return (
+            <span key={m.id} title={black ? `${m.name} — API not integrated` : `${m.name} — ${m.status}`}
+              style={{ width: 11, height: 11, borderRadius: "50%", background: black ? C.ink : m.flag,
+                border: "1px solid rgba(0,0,0,.10)", flex: "none" }} />
+          );
+        })}
       </div>
     </div>
   );
@@ -336,10 +340,11 @@ function MinistryMark({ ministryKey }) {
   );
 }
 
-function InitiativeCard({ i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, stacked, basis, cumulativeLoading, monthLoading, fill, hovered, onHover, onLeave, onOpen, onDetail }) {
+function InitiativeCard({ i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, stacked, basis, cumulativeLoading, monthLoading, fill, wide, hovered, onHover, onLeave, onOpen, onDetail }) {
   const Ico = initiativeIcon(i.key);
   const a = initiativeAccent(i.key);
   const rows = [...ks, ...(extra || [])];
+  const sideBySide = wide && rows.length > 1;
   return (
     <article data-card
       onClick={onOpen}
@@ -381,11 +386,15 @@ function InitiativeCard({ i, ks, ksMonth, l2, l2Month, l3, extra, extraMonth, st
           borderRadius: "50%", background: hovered ? a.fg : "#fff", border: `1px solid ${hovered ? a.fg : a.bd}`,
           color: hovered ? "#fff" : a.fg, fontSize: 14, fontWeight: 700, transition: "all 0.16s ease" }}>›</span>
       </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <div style={sideBySide
+        ? { flex: 1, display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))" }
+        : { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         {rows.map((k, idx) => {
           const km = (idx < ks.length ? ksMonth?.[idx] : extraMonth?.[idx - ks.length]) || k;
           return (
-            <div key={k.id} style={{ padding: "17px 20px 18px", borderBottom: idx < rows.length - 1 ? `1px solid ${C.line2}` : "none" }}>
+            <div key={k.id} style={sideBySide
+              ? { padding: "17px 20px 18px", borderLeft: idx % 2 === 1 ? `1px solid ${C.line2}` : "none" }
+              : { padding: "17px 20px 18px", borderBottom: idx < rows.length - 1 ? `1px solid ${C.line2}` : "none" }}>
               <MetricRow k={k} km={km} onDetail={onDetail} iKey={i.key} stacked={stacked}
                 cumulative={idx < ks.length && !k.noCumulative}
                 cumulativeLoading={cumulativeLoading} monthLoading={monthLoading} />
