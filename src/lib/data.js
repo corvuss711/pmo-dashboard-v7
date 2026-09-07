@@ -260,7 +260,7 @@ const BASE_INITIATIVES = [
         formula: "SCC land parcels earmarked ÷ No. of SCCs needed", rationale: "Measures land parcels earmarked across SCCs.",
         agency: "ULB", source: "To be sought from CAQM", numL: "parcels earmarked", denL: "SCCs needed",
         context: ["SCCs needed assessed", "Land parcels earmarked", "SCC operationalised"], active: 1 },
-      { stage: 2, stageLabel: "Operationalised", name: "% SCCs operationalized", num: 0, den: 0,
+      { stage: 2, stageLabel: "Operationalised", name: "% SCC operationalized as % of rearmarked land parcels", num: 0, den: 0,
         formula: "No. of SCCs operationalized ÷ SCC land parcels earmarked", rationale: "Measures SCCs operationalized as per SOP safeguards.",
         agency: "ULB", source: "To be sought from CAQM", numL: "operational", denL: "parcels earmarked",
         context: ["Land parcels earmarked", "SCC operationalised", "SOP compliance checked"], active: 1 },

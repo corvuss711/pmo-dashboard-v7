@@ -48,6 +48,11 @@ export const TARGETS = {
       aggregate: { "All-Delhi NCR": 405, Delhi: 171, Haryana: 105, Rajasthan: 21, UP: 108 },
       cumulative: { "All-Delhi NCR": 256, Delhi: 102, Haryana: 75, Rajasthan: 32, UP: 47 },
     },
+    "% MRS in tender": {
+      segments: ["gt10"],
+      aggregate: { "All-Delhi NCR": 405, Delhi: 171, Haryana: 105, Rajasthan: 21, UP: 108 },
+      cumulative: { "All-Delhi NCR": 256, Delhi: 102, Haryana: 75, Rajasthan: 32, UP: 47 },
+    },
     "% route covered (km)": {
       segments: ["gt10"],
       percent: true,
@@ -59,6 +64,14 @@ export const TARGETS = {
     "% roads with redevelopment completed": {
       aggregate: { "All-Delhi NCR": 6857, Delhi: 3065, Haryana: 1693, Rajasthan: 307, UP: 1792 },
       cumulative: { "All-Delhi NCR": 2508, Delhi: 1226, Haryana: 466, Rajasthan: 100, UP: 716 },
+    },
+  },
+  iccc: {
+    "% sites complying with identified interventions": {
+      aggregate: { "All-Delhi NCR": 1869, Delhi: 1869 },
+    },
+    "Share of sites registered": {
+      aggregate: { "All-Delhi NCR": 1869, Delhi: 1869 },
     },
   },
 };
