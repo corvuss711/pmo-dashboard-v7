@@ -39,7 +39,7 @@ export const TARGETS = {
   scc: {
     "% SCCs operationalized": {
       aggregate: { "All-Delhi NCR": 155, Delhi: 59, Haryana: 52, Rajasthan: 7, UP: 37 },
-      cumulative: { "All-Delhi NCR": 96, Delhi: 0, Haryana: 34, Rajasthan: 30, UP: 32 },
+      cumulative: { "All-Delhi NCR": 96, Delhi: 0, Haryana: 47, Rajasthan: 7, UP: 42 },
     },
   },
   mrs: {
