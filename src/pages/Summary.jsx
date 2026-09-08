@@ -8,7 +8,7 @@ import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { useMrsRrSummary } from "../departments/mohua/useMrsRrSummary.js";
 import { applyCaqmOverrides } from "../departments/mohua/caqmLive.js";
 import { applyTargets } from "../lib/targets.js";
-import { zeroActuals } from "../lib/liveOverrides.js";
+import { zeroActuals, copyAggregateNum } from "../lib/liveOverrides.js";
 import { initiativeIcon, initiativeAccent, ministryIcon, ministryAccent, metricIcon, LayersIcon, CalendarRangeIcon, DownloadIcon } from "../lib/icons.jsx";
 
 
@@ -59,7 +59,9 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       }
 
       const liveFeed = API_INTEGRATED.has(i.key);
-      if (liveFeed) ksMonth = zeroActuals(ksMonth);
+      const copyAgg = i.key === "mrs" || i.key === "road" || i.key === "scc";
+      if (copyAgg) ksMonth = copyAggregateNum(ksMonth, ks);
+      else if (liveFeed) ksMonth = zeroActuals(ksMonth);
       ks = applyTargets(ks, i.key, "All-Delhi NCR", "aggregate");
       ksMonth = applyTargets(ksMonth, i.key, "All-Delhi NCR", "cumulative");
 
@@ -79,7 +81,8 @@ export default function Summary({ onNavigate, onLogout, loggingOut }) {
       if (i.key === "mrs" || i.key === "road" || i.key === "scc") l2Month = applyCaqmOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), i.key, "L2", caqmMonthByKey);
       if (i.key === "iccc") l2Month = applyIcccOverrides(l2Of(i, "All-Delhi NCR", rf, null, true), icccMonthByKey);
 
-      if (API_INTEGRATED.has(i.key)) l2Month = zeroActuals(l2Month);
+      if (copyAgg) l2Month = copyAggregateNum(l2Month, l2);
+      else if (API_INTEGRATED.has(i.key)) l2Month = zeroActuals(l2Month);
 
       const extraIdx = i.key.startsWith("parivartan")
         ? l2.findIndex((x) => x.name === "% registered on portal")

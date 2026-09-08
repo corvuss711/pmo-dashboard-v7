@@ -57,6 +57,21 @@ export function withNoDataMessage(view, message = "Data not provided") {
   };
 }
 
+export function copyAggregateNum(monthViews, aggViews) {
+  return monthViews.map((v, i) => {
+    const num = aggViews[i]?.num;
+    if (v.num == null || num == null) return v;
+    const p = v.den > 0 ? Math.round((num / v.den) * 100) : 0;
+    return {
+      ...v, num, raw: p,
+      pct: v.den > 0 ? p + "%" : v.pct,
+      frac: v.den > 0 ? nf(num) + " / " + nf(v.den) : v.frac,
+      bar: (v.den > 0 ? Math.min(100, p) : 0) + "%",
+      flag: flag(p), track: track(p), status: statusWord(p),
+    };
+  });
+}
+
 export function zeroActuals(views) {
   return views.map((v) => {
     if (v.num == null) return v;

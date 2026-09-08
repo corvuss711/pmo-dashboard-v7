@@ -8,7 +8,7 @@ import { applyApcdOverrides } from "../departments/moefcc/apcdLive.js";
 import { useIcccSummary } from "../departments/moefcc/useIcccSummary.js";
 import { applyIcccOverrides } from "../departments/moefcc/icccLive.js";
 import { applyTargets } from "../lib/targets.js";
-import { zeroActuals } from "../lib/liveOverrides.js";
+import { zeroActuals, copyAggregateNum } from "../lib/liveOverrides.js";
 
 const LayersIcon = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +93,10 @@ export default function Process({ initiative, region, onNavigate, onLogout, logg
     l2Month = applyIcccOverrides(l2Of(initiative, region, rf, seg), icccMonthByKey);
   }
  
-  if (API_INTEGRATED.has(initiative.key)) {
+  if (initiative.key === "mrs" || initiative.key === "road" || initiative.key === "scc") {
+    l1Month = copyAggregateNum(l1Month, l1);
+    l2Month = copyAggregateNum(l2Month, l2);
+  } else if (API_INTEGRATED.has(initiative.key)) {
     l1Month = zeroActuals(l1Month);
     l2Month = zeroActuals(l2Month);
   }
